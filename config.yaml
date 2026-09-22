@@ -1,0 +1,91 @@
+project:
+  name: "Context-Aware Recommendation System for Visual Analytics: Mitigating Cold-Start via Multi-Modal Behavioral Fusion"
+  seed: 42
+  device: "cpu"
+
+data:
+  raw_path: "data/raw/Ecommerce.csv"
+  cleaned_path: "data/processed/cleaned_dataset.csv"
+  train_path: "data/processed/train.csv"
+  val_path: "data/processed/validation.csv"
+  test_path: "data/processed/test.csv"
+  features_dir: "data/processed"
+  metadata_path: "outputs/dataset_metadata.json"
+  feedback_path: "outputs/feedback.csv"
+
+splitting:
+  strategy: "chronological"
+  date_column: "visit_date"
+  date_format: "%d-%m-%Y"
+  # Strictly chronological intervals without overlap
+  train_start: "2024-01-01"
+  train_end: "2024-07-31"
+  val_start: "2024-08-01"
+  val_end: "2024-09-30"
+  test_start: "2024-10-01"
+  test_end: "2024-12-30"
+
+features:
+  target: "purchased"
+  # Outcome-derived or post-decision fields strictly excluded from predictive model to prevent leakage:
+  excluded_outcome_fields:
+    - "revenue"
+    - "rating"
+    - "review_text"
+    - "review_helpful_votes"
+    - "cart_abandoned"
+    - "payment_method"
+    - "added_to_cart"
+    - "revenue_normalized"
+
+  # Predictor groups available at recommendation time (pre-decision):
+  behavioral_historical:
+    - "hist_interaction_count"
+    - "hist_purchase_count"
+    - "hist_purchase_rate"
+    - "hist_revenue"
+    - "hist_cart_add_rate"
+    - "hist_avg_pages_viewed"
+    - "hist_avg_time_on_site"
+    - "recency_days"
+    - "hist_category_preference" # 8-dim vector of past interaction share per category
+
+  content_candidate:
+    - "product_id"
+    - "product_category"
+    - "unit_price"
+    - "discount_percent"
+    - "discount_amount"
+
+  context_session:
+    - "device_type"
+    - "user_type"
+    - "marketing_channel"
+    - "location"
+    - "visit_day"
+    - "visit_month"
+    - "visit_weekday"
+    - "visit_season"
+
+cold_start:
+  primary_threshold: 3
+  evaluated_thresholds: [1, 2, 3, 5]
+  cold_behavior_penalty: 0.01
+
+model:
+  embedding_dim: 64
+  hidden_dims: [128, 64]
+  dropout: 0.2
+  learning_rate: 0.001
+  batch_size: 256
+  epochs: 15
+  weight_decay: 0.00001
+
+ranking:
+  k_values: [5, 10]
+  default_k: 5
+  filter_already_purchased: true
+
+evaluation:
+  metrics: ["Precision@K", "Recall@K", "NDCG@K", "HitRate@K"]
+  cohorts: ["Overall", "Warm-Start", "Cold-Start"]

@@ -1,9 +1,0 @@
-Ablation Model,Overall Precision@5,Overall NDCG@5,Cold-Start NDCG@5,Warm-Start NDCG@5
-Model A (Behavior Only),0.0126,0.0375,0.0328,0.0435
-Model B (Content Only),0.0118,0.033,0.0308,0.0359
-Model C (Context Only),0.0115,0.0326,0.0326,0.0327
-Model D (Behavior + Content),0.0121,0.0361,0.0372,0.0348
-Model E (Behavior + Context),0.0139,0.0407,0.0375,0.0447
-Model F (Content + Context),0.0112,0.0323,0.0347,0.0291
-Model G (Behavior + Content + Context - Unweighted),0.0126,0.0362,0.0334,0.0397
-Model H (Proposed Multi-Modal + Adaptive Cold-Start Gate),0.0115,0.0323,0.0336,0.0306

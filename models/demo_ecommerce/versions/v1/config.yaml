@@ -1,0 +1,87 @@
+client_id: demo_ecommerce
+client_name: Indian E-Commerce Customer Behavior & Purchase
+column_mappings:
+  customer_id: USER_ID
+  session_id: IGNORE
+  visit_date: TIMESTAMP
+  device_type: CONTEXT_FEATURE
+  user_type: CONTEXT_FEATURE
+  marketing_channel: CONTEXT_FEATURE
+  product_id: ITEM_ID
+  product_category: CONTENT_FEATURE
+  unit_price: CONTENT_FEATURE
+  quantity: IGNORE
+  discount_percent: CONTENT_FEATURE
+  discount_amount: CONTENT_FEATURE
+  revenue: IGNORE
+  pages_viewed: BEHAVIOR_FEATURE
+  time_on_site_sec: BEHAVIOR_FEATURE
+  added_to_cart: IGNORE
+  purchased: TARGET
+  cart_abandoned: IGNORE
+  rating: IGNORE
+  review_text: IGNORE
+  review_helpful_votes: IGNORE
+  payment_method: IGNORE
+  visit_day: CONTEXT_FEATURE
+  visit_month: CONTEXT_FEATURE
+  visit_weekday: CONTEXT_FEATURE
+  visit_season: CONTEXT_FEATURE
+  session_duration_bucket: IGNORE
+  revenue_normalized: IGNORE
+  location: CONTEXT_FEATURE
+column_types:
+  customer_id: id
+  session_id: id
+  visit_date: datetime
+  device_type: categorical
+  user_type: categorical
+  marketing_channel: categorical
+  product_id: id
+  product_category: categorical
+  unit_price: numeric
+  quantity: numeric
+  discount_percent: numeric
+  discount_amount: numeric
+  revenue: numeric
+  pages_viewed: numeric
+  time_on_site_sec: numeric
+  added_to_cart: numeric
+  purchased: numeric
+  cart_abandoned: numeric
+  rating: numeric
+  review_text: categorical
+  review_helpful_votes: numeric
+  payment_method: categorical
+  visit_day: numeric
+  visit_month: numeric
+  visit_weekday: numeric
+  visit_season: categorical
+  session_duration_bucket: categorical
+  revenue_normalized: numeric
+  location: numeric
+timestamp_format: '%d-%m-%Y'
+split_config:
+  strategy: chronological
+  date_column: visit_date
+  date_format: '%d-%m-%Y'
+  train_start: '2024-01-01'
+  train_end: '2024-07-31'
+  val_start: '2024-08-01'
+  val_end: '2024-09-30'
+  test_start: '2024-10-01'
+  test_end: '2024-12-30'
+outlier_columns:
+- unit_price
+- discount_amount
+- time_on_site_sec
+- pages_viewed
+cold_start_threshold: 3
+evaluated_thresholds:
+- 1
+- 2
+- 3
+- 5
+target_positive_value: 1
+description: Canonical reference dataset configuration matching Phase 1 model (16
+  Beh, 12 Cont, 21 Ctx).

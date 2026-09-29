@@ -1,0 +1,15 @@
+{
+  "client_id": "demo_ecommerce",
+  "model_version": "v1",
+  "training_run_id": "legacy_run_baseline",
+  "dataset_reference": "Ecommerce.csv",
+  "training_timestamp": "2026-09-28T08:14:08.268459+00:00",
+  "feature_dimensions": {
+    "behavior": 16,
+    "content": 12,
+    "context": 21
+  },
+  "cold_start_threshold": 3,
+  "random_seed": 42,
+  "legacy_imported": true
+}

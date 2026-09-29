@@ -1,0 +1,15 @@
+{
+  "client_id": "movielens_dataset",
+  "model_version": "v1",
+  "training_run_id": "run_movielens_dataset_04b1b5f3",
+  "dataset_reference": "movielens_client.csv",
+  "training_timestamp": "2026-09-29T13:09:12.570366+00:00",
+  "feature_dimensions": {
+    "behavior": 6,
+    "content": 40,
+    "context": 1
+  },
+  "cold_start_threshold": 3,
+  "random_seed": 42,
+  "legacy_imported": false
+}

@@ -1,11 +1,74 @@
-﻿.venv/
+# ==============================================================================
+# Context-Aware Recommender — .gitignore
+# ==============================================================================
+
+# Python Virtual Environments
+.venv/
 venv/
+ENV/
+env/
+
+# Python Bytecode, Caches and Testing
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook Checkpoints
 .ipynb_checkpoints/
+
+# Environment Variables & Secrets
 .env
-outputs/
+.env.*
+!.env.example
+
+# Runtime Logs & Process Tracking
+*.log
+*.pid
+data/server.log
+data/server.pid
+
+# SQLite Runtime Databases & Caches
+*.db
+*.sqlite
+*.sqlite3
+data/platform.db
+
+# Node.js and Frontend Dependencies & Caches
+node_modules/
+frontend/node_modules/
+.npm/
+
+# Model Checkpoints and Numerical Tensors (Retained locally, ignored by default)
 *.pt
 *.pth
 *.npz
+
+# Production / Demo Model Checkpoints (Explicitly tracked for demo portability)
+!models/demo_ecommerce/versions/v1/model.pt
+!models/context_aware_ar_interaction/versions/v2/model.pt
+!models/movielens_dataset/versions/v1/model.pt
+
+# Generated Processed Data & Research Output Folders
 data/processed/
+outputs/
+
+# Client Workspaces: Raw Uploads, Processed Tensors & Ephemeral Test Clients
+clients/*/raw/
+clients/*/processed/
+clients/railrocket_recommender_system/
+clients/contract_violation_client/
+clients/generic_client_dynamic/
+
+# Ephemeral Test Models
+models/contract_violation_client/
+models/generic_client_dynamic/
+models/client_no_model/
+
+# OS and Editor Temporary Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

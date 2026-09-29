@@ -1,0 +1,15 @@
+{
+  "client_id": "context_aware_ar_interaction",
+  "model_version": "v2",
+  "training_run_id": "run_context_aware_ar_interaction_d24cb0ad",
+  "dataset_reference": "Context_Data.csv",
+  "training_timestamp": "2026-09-29T11:34:54.130954+00:00",
+  "feature_dimensions": {
+    "behavior": 8,
+    "content": 7,
+    "context": 37
+  },
+  "cold_start_threshold": 3,
+  "random_seed": 42,
+  "legacy_imported": false
+}

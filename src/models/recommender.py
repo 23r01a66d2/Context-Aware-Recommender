@@ -46,7 +46,7 @@ class TwoTowerMultiModalRecommender(nn.Module):
 
         # Modality Encoders
         self.behavior_encoder = BehavioralEncoder(input_dim=beh_dim, embedding_dim=embedding_dim, dropout=dropout)
-        self.content_encoder = ContentEncoder(num_products=num_products, embedding_dim=embedding_dim, dropout=dropout)
+        self.content_encoder = ContentEncoder(num_products=num_products, meta_input_dim=cont_meta_dim, embedding_dim=embedding_dim, dropout=dropout)
         self.context_encoder = ContextEncoder(input_dim=ctx_dim, embedding_dim=embedding_dim, dropout=dropout)
 
         # Fusion & Cold-Start Mechanisms

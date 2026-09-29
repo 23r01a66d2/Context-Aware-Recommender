@@ -88,6 +88,34 @@ class TestRecommenderPipeline(unittest.TestCase):
         # Weights must sum to 1.0
         self.assertAlmostEqual(adj_w[1].sum().item(), 1.0, places=4)
 
+    def test_05b_cold_warm_exact_boundary_tensor(self):
+        """
+        Explicit Tensor Boundary Test for ColdStartAdaptiveGate:
+        Verifies N_hist in {0, 1, 2, 3, 4} with K=3 strictly produces:
+        0 -> cold (True)
+        1 -> cold (True)
+        2 -> cold (True)
+        3 -> warm (False)
+        4 -> warm (False)
+        """
+        gate = ColdStartAdaptiveGate(primary_threshold=3, behavior_penalty=0.01)
+        b = torch.randn(5, 64)
+        c = torch.randn(5, 64)
+        x = torch.randn(5, 64)
+        weights = torch.full((5, 3), 1.0 / 3.0)
+        hist = torch.tensor([0, 1, 2, 3, 4], dtype=torch.int64)
+
+        fused, adj_w, cold_m = gate(b, c, x, weights, hist)
+        expected_mask = [True, True, True, False, False]
+        for i, exp in enumerate(expected_mask):
+            self.assertEqual(bool(cold_m[i].item()), exp, f"Failed for N_hist = {i}")
+            if exp:
+                # Cold cases must have behavior suppressed to <= 0.01
+                self.assertLessEqual(adj_w[i, 0].item(), 0.01)
+            else:
+                # Warm cases preserve original weight (1/3 = ~0.33)
+                self.assertGreater(adj_w[i, 0].item(), 0.3)
+
     def test_06_recommender_forward(self):
         """Verify Two-Tower Recommender forward pass and candidate scoring."""
         model = TwoTowerMultiModalRecommender(num_products=1000, embedding_dim=64)

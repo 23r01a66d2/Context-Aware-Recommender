@@ -1,0 +1,39 @@
+client_id: context_aware_ar_interaction
+client_name: context_aware_ar_interaction
+column_mappings:
+  user_id: USER_ID
+  timestamp: TIMESTAMP
+  location_id: ITEM_ID
+  content_clicked: TARGET
+  latitude: CONTEXT_FEATURE
+  longitude: CONTEXT_FEATURE
+  weather: CONTEXT_FEATURE
+  temperature_celsius: CONTEXT_FEATURE
+  crowd_density: CONTEXT_FEATURE
+  user_age: CONTEXT_FEATURE
+  user_language: CONTEXT_FEATURE
+  cultural_interest_category: CONTENT_FEATURE
+  previous_visits_count: CONTEXT_FEATURE
+  time_spent_minutes: BEHAVIOR_FEATURE
+  interaction_type: CONTEXT_FEATURE
+  satisfaction_score: CONTEXT_FEATURE
+  recommended_content_type: CONTENT_FEATURE
+column_types: {}
+timestamp_format: '%Y-%m-%d %H:%M:%S'
+split_config:
+  strategy: chronological
+  train_start: '2024-01-01'
+  train_end: '2024-07-31'
+  val_start: '2024-08-01'
+  val_end: '2024-09-30'
+  test_start: '2024-10-01'
+  test_end: '2024-12-30'
+outlier_columns: []
+cold_start_threshold: 3
+evaluated_thresholds:
+- 1
+- 2
+- 3
+- 5
+target_positive_value: 1
+description: ''

@@ -402,6 +402,9 @@ def invalidate_client_cache(client_id: str) -> None:
             logger.info(f"Invalidated model cache for client '{client_id}': {keys_to_delete}")
 
 
+clear_client_cache = invalidate_client_cache
+
+
 def clear_all_cache() -> None:
     """Clears all cached entries across all clients (useful for testing)."""
     with _lock:

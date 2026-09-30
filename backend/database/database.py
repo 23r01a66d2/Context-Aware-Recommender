@@ -42,6 +42,14 @@ def init_db() -> None:
 
     from sqlalchemy import inspect, text
     inspector = inspect(engine)
+    if "clients" in inspector.get_table_names():
+        cols = {c["name"] for c in inspector.get_columns("clients")}
+        with engine.connect() as conn:
+            if "is_system" not in cols:
+                conn.execute(text("ALTER TABLE clients ADD COLUMN is_system BOOLEAN DEFAULT 0 NOT NULL"))
+            conn.execute(text("UPDATE clients SET is_system = 1 WHERE client_id = 'demo_ecommerce'"))
+            conn.commit()
+
     if "training_runs" in inspector.get_table_names():
         cols = {c["name"] for c in inspector.get_columns("training_runs")}
         with engine.connect() as conn:

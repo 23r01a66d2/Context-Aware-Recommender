@@ -51,6 +51,9 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
+  deleteClient: (clientId, deletePhysicalFiles = false) => request(`/clients/${clientId}?delete_physical_files=${deletePhysicalFiles}`, {
+    method: 'DELETE',
+  }),
 
   // 3. Datasets
   getDataset: (clientId) => request(`/clients/${clientId}/dataset`),

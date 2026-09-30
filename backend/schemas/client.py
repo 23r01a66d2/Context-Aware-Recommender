@@ -36,6 +36,7 @@ class ClientResponse(BaseModel):
     client_id: str
     name: str
     description: Optional[str] = ""
+    is_system: bool = False
     created_at: datetime
     dataset_count: int = 0
     has_schema: bool = False
@@ -49,3 +50,10 @@ class ClientResponse(BaseModel):
 class ClientListResponse(BaseModel):
     clients: List[ClientResponse]
     total: int
+
+
+class ClientDeleteResponse(BaseModel):
+    client_id: str
+    message: str
+    deleted_records: dict
+    physical_files_deleted: bool

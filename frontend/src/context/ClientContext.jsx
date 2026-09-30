@@ -68,6 +68,22 @@ export function ClientProvider({ children }) {
     setStoredClientId(clientId);
   };
 
+  const handleClientDeleted = (deletedClientId) => {
+    setClients((prev) => {
+      const remaining = prev.filter((c) => c.client_id !== deletedClientId);
+      setSelectedClientId((current) => {
+        if (current === deletedClientId) {
+          const fallback = remaining.find((c) => c.client_id === 'demo_ecommerce') || remaining[0];
+          const fallbackId = fallback ? fallback.client_id : 'demo_ecommerce';
+          setStoredClientId(fallbackId);
+          return fallbackId;
+        }
+        return current;
+      });
+      return remaining;
+    });
+  };
+
   const selectedClient = Array.isArray(clients) ? (clients.find(c => c.client_id === selectedClientId) || null) : null;
 
   return (
@@ -77,6 +93,7 @@ export function ClientProvider({ children }) {
         selectedClientId,
         selectedClient,
         selectClient,
+        handleClientDeleted,
         loadingClients,
         refreshClients: fetchClients,
         health,

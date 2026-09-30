@@ -31,6 +31,7 @@ class ClientModel(Base):
     client_id = Column(String(64), unique=True, index=True, nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text, default="", nullable=True)
+    is_system = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=utcnow, nullable=False)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 

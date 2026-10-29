@@ -62,11 +62,12 @@ def check_app_health(timeout: float = 1.5) -> tuple[bool, dict]:
 
 def is_our_server_proc(pid: int) -> bool:
     """
-    Safely verifies via Windows PowerShell whether a given process ID
+    Safely verifies whether a given process ID
     corresponds to our Uvicorn recommender server (backend.main:app).
     """
     if pid <= 0:
         return False
+    # 1. Try PowerShell Get-CimInstance
     try:
         cmd = f"(Get-CimInstance Win32_Process -Filter \"ProcessId = {pid}\").CommandLine"
         out = subprocess.check_output(
@@ -78,6 +79,31 @@ def is_our_server_proc(pid: int) -> bool:
             return True
     except Exception:
         pass
+
+    # 2. Try WMIC fallback
+    try:
+        out = subprocess.check_output(
+            ["wmic", "process", "where", f"ProcessId={pid}", "get", "CommandLine"],
+            text=True,
+            stderr=subprocess.DEVNULL
+        ).strip()
+        if "backend.main:app" in out:
+            return True
+    except Exception:
+        pass
+
+    # 3. Try tasklist fallback (verify it is a python process)
+    try:
+        out = subprocess.check_output(
+            ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+            text=True,
+            stderr=subprocess.DEVNULL
+        ).lower()
+        if "python" in out:
+            return True
+    except Exception:
+        pass
+
     return False
 
 
@@ -187,27 +213,28 @@ def cmd_start() -> int:
         f.write(str(server_proc.pid))
 
     # 3. Health check polling
-    print("Awaiting application initialization (/api/health)...")
+    print("Awaiting application initialization (/api/health)...", end="", flush=True)
     healthy = False
     start_time = time.time()
-    max_wait_seconds = 20.0
+    max_wait_seconds = 60.0
 
     while time.time() - start_time < max_wait_seconds:
         # Check if process died prematurely
         if server_proc.poll() is not None:
             print(f"\n[ERROR] Server process exited unexpectedly with code {server_proc.poll()}.")
-            print_log_tail()
+            print_log_tail(num_lines=30)
             PID_FILE.unlink(missing_ok=True)
             return 1
 
-        healthy, _ = check_app_health(timeout=1.0)
+        healthy, _ = check_app_health(timeout=1.5)
         if healthy:
             break
-        time.sleep(0.5)
+        print(".", end="", flush=True)
+        time.sleep(1.0)
 
     if not healthy:
-        print("\n[ERROR] Health check timed out after 20 seconds.")
-        print_log_tail()
+        print("\n[ERROR] Health check timed out after 60 seconds.")
+        print_log_tail(num_lines=30)
         terminate_pid(server_proc.pid)
         PID_FILE.unlink(missing_ok=True)
         return 1

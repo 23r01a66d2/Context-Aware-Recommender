@@ -76,14 +76,14 @@ export default function ClientsPage() {
     <div className="space-y-6">
       {/* Toast Notification */}
       {notification && (
-        <div className="flex items-center justify-between p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs animate-fadeIn">
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-700 dark:text-teal-300 text-xs animate-fadeIn">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-teal-500 flex-shrink-0" />
             <span>{notification.message}</span>
           </div>
           <button
             onClick={() => setNotification(null)}
-            className="text-emerald-400 hover:text-emerald-200 transition-colors ml-4"
+            className="text-teal-600 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-100 transition-colors ml-4 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -92,11 +92,11 @@ export default function ClientsPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-emerald-400" />
+          <h1 className="text-xl sm:text-2xl font-bold dark:text-coolwhite text-slate-900 tracking-tight flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-teal-500" />
             Client Organizations
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs dark:text-muted text-slate-500 mt-0.5">
             Manage multi-tenant isolated workspaces, schema definitions, and model versions.
           </p>
         </div>
@@ -105,14 +105,14 @@ export default function ClientsPage() {
           <button
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-2 rounded-xl dark:bg-navy-900 bg-white border dark:border-navy-800 border-slate-200 dark:text-muted text-slate-600 hover:dark:text-coolwhite hover:text-slate-900 transition-colors cursor-pointer shadow-sm"
             title="Refresh Client List"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
           <Link
             to="/admin/clients/new"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-sm transition-all"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-navy-950 font-bold text-xs shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" />
             Add New Client
@@ -121,28 +121,28 @@ export default function ClientsPage() {
       </div>
 
       {/* Clients Table */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+      <div className="dark:bg-navy-900 bg-white border dark:border-navy-800 border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-colors duration-200">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold">
+            <thead className="dark:bg-navy-950/80 bg-slate-50 border-b dark:border-navy-800 border-slate-200 dark:text-muted text-slate-500 uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">Client ID</th>
-                <th className="py-3 px-4">Organization Name</th>
-                <th className="py-3 px-4">Active Model</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4">Client ID</th>
+                <th className="py-3.5 px-4">Organization Name</th>
+                <th className="py-3.5 px-4">Active Model</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y dark:divide-navy-800/60 divide-slate-100">
               {loadingClients ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                  <td colSpan={5} className="py-8 text-center dark:text-muted text-slate-500">
                     Loading clients...
                   </td>
                 </tr>
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                  <td colSpan={5} className="py-8 text-center dark:text-muted text-slate-500">
                     No clients found. Click "Add New Client" to create one.
                   </td>
                 </tr>
@@ -154,27 +154,27 @@ export default function ClientsPage() {
                   return (
                     <tr
                       key={client.client_id}
-                      className={`hover:bg-slate-800/40 transition-colors ${
-                        isSelected ? 'bg-emerald-500/[0.04]' : ''
+                      className={`dark:hover:bg-navy-850 hover:bg-slate-50 transition-colors ${
+                        isSelected ? 'dark:bg-teal-500/[0.04] bg-teal-50/50' : ''
                       }`}
                     >
-                      <td className="py-3.5 px-4 font-mono font-medium text-slate-200">
+                      <td className="py-3.5 px-4 font-mono font-medium dark:text-coolwhite text-slate-900">
                         {client.client_id}
                         {isSelected && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-sans border border-emerald-500/20">
+                          <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-400 font-sans border border-teal-300 dark:border-teal-500/20 font-bold">
                             Active Scope
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 font-medium text-white">{client.name || '—'}</td>
+                      <td className="py-3.5 px-4 font-medium dark:text-coolwhite text-slate-900">{client.name || '—'}</td>
                       <td className="py-3.5 px-4">
                         {client.active_model_version ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3 h-3" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-300 dark:border-teal-500/20">
+                            <CheckCircle2 className="w-3 h-3 text-teal-500" />
                             {client.active_model_version}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-800 text-slate-400 border border-slate-700">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] dark:bg-navy-950 bg-slate-100 dark:text-muted text-slate-500 border dark:border-navy-800 border-slate-200">
                             <AlertCircle className="w-3 h-3" />
                             No Active Model
                           </span>
@@ -183,14 +183,14 @@ export default function ClientsPage() {
                       <td className="py-3.5 px-4">
                         {isSystem ? (
                           <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20 font-medium"
                             title="Reference benchmark client protected against deletion"
                           >
-                            <ShieldCheck className="w-3 h-3" />
+                            <ShieldCheck className="w-3 h-3 text-amber-500" />
                             Protected Reference
                           </span>
                         ) : (
-                          <span className="text-slate-400">Ready</span>
+                          <span className="dark:text-muted text-slate-600">Ready</span>
                         )}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -198,7 +198,7 @@ export default function ClientsPage() {
                           {!isSelected && (
                             <button
                               onClick={() => selectClient(client.client_id)}
-                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-[11px] transition-colors"
+                              className="px-2.5 py-1 rounded-lg dark:bg-navy-800 bg-slate-100 hover:dark:bg-navy-700 hover:bg-slate-200 dark:text-coolwhite text-slate-800 font-medium text-[11px] transition-colors cursor-pointer"
                             >
                               Switch Scope
                             </button>
@@ -206,7 +206,7 @@ export default function ClientsPage() {
                           <Link
                             to={`/admin/clients/${client.client_id}/dataset`}
                             onClick={() => selectClient(client.client_id)}
-                            className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-emerald-400 transition-colors"
+                            className="p-1.5 rounded-lg hover:dark:bg-navy-800 hover:bg-slate-100 dark:text-muted text-slate-500 hover:text-teal-500 transition-colors"
                             title="Manage Dataset & Models"
                           >
                             <ArrowRight className="w-4 h-4" />
@@ -216,7 +216,7 @@ export default function ClientsPage() {
                           {isSystem ? (
                             <button
                               disabled
-                              className="p-1.5 rounded text-slate-600 cursor-not-allowed opacity-50"
+                              className="p-1.5 rounded-lg text-slate-400 cursor-not-allowed opacity-40"
                               title="Reference benchmark client cannot be deleted"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -224,7 +224,7 @@ export default function ClientsPage() {
                           ) : (
                             <button
                               onClick={() => openDeleteModal(client)}
-                              className="p-1.5 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-rose-500/15 text-rose-500 dark:text-rose-400 transition-colors cursor-pointer"
                               title={`Delete ${client.client_id}`}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -244,47 +244,47 @@ export default function ClientsPage() {
       {/* Confirmation Modal */}
       {clientToDelete && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-rose-500/30 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+          <div className="dark:bg-navy-900 bg-white border border-rose-500/40 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative animate-scaleUp">
             <button
               onClick={closeDeleteModal}
               disabled={deleting}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 transition-colors"
+              className="absolute top-4 right-4 dark:text-muted text-slate-400 hover:dark:text-coolwhite hover:text-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex-shrink-0">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex-shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Delete Client Organization</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <h3 className="text-base font-bold dark:text-coolwhite text-slate-900">Delete Client Organization</h3>
+                <p className="text-xs dark:text-muted text-slate-500 mt-0.5">
                   This action permanently removes the client registration and all associated platform records.
                 </p>
               </div>
             </div>
 
             {/* Client details card */}
-            <div className="bg-slate-950/60 rounded-lg p-3 border border-slate-800 text-xs space-y-1.5">
+            <div className="dark:bg-navy-950 bg-slate-50 rounded-xl p-3 border dark:border-navy-800 border-slate-200 text-xs space-y-1.5">
               <div className="flex justify-between">
-                <span className="text-slate-400">Client ID:</span>
-                <span className="font-mono font-bold text-rose-400">{clientToDelete.client_id}</span>
+                <span className="dark:text-muted text-slate-500">Client ID:</span>
+                <span className="font-mono font-bold text-rose-500 dark:text-rose-400">{clientToDelete.client_id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Organization Name:</span>
-                <span className="text-slate-200 font-medium">{clientToDelete.name}</span>
+                <span className="dark:text-muted text-slate-500">Organization Name:</span>
+                <span className="dark:text-coolwhite text-slate-800 font-medium">{clientToDelete.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Active Model:</span>
-                <span className="text-slate-300 font-mono">{clientToDelete.active_model_version || 'None'}</span>
+                <span className="dark:text-muted text-slate-500">Active Model:</span>
+                <span className="dark:text-coolwhite text-slate-800 font-mono">{clientToDelete.active_model_version || 'None'}</span>
               </div>
             </div>
 
             {/* Impact List */}
-            <div className="text-xs text-slate-400 space-y-1">
-              <p className="font-semibold text-slate-300">The following records will be permanently removed:</p>
-              <ul className="list-disc list-inside space-y-0.5 text-slate-400 pl-1">
+            <div className="text-xs dark:text-muted text-slate-600 space-y-1">
+              <p className="font-semibold dark:text-coolwhite text-slate-800">The following records will be permanently removed:</p>
+              <ul className="list-disc list-inside space-y-0.5 pl-1">
                 <li>Platform client registration</li>
                 <li>Schema mappings & inferred feature configs</li>
                 <li>Dataset registrations & preview metadata</li>
@@ -294,21 +294,21 @@ export default function ClientsPage() {
             </div>
 
             {/* Physical files checkbox */}
-            <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+            <div className="dark:bg-navy-950 bg-slate-50 p-3 rounded-xl border dark:border-navy-800 border-slate-200">
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={deletePhysicalFiles}
                   onChange={(e) => setDeletePhysicalFiles(e.target.checked)}
                   disabled={deleting}
-                  className="mt-0.5 rounded border-slate-700 text-rose-600 focus:ring-rose-500 bg-slate-900"
+                  className="mt-0.5 rounded border-slate-300 dark:border-navy-700 text-rose-600 focus:ring-rose-500 dark:bg-navy-900 w-4 h-4 cursor-pointer"
                 />
                 <div className="text-xs">
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium dark:text-coolwhite text-slate-800">
                     Also permanently delete local files and model checkpoints on disk
                   </span>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Target folders: <code className="text-slate-400 font-mono">clients/{clientToDelete.client_id}</code> and <code className="text-slate-400 font-mono">models/{clientToDelete.client_id}</code>. If unchecked, files are preserved for re-registration.
+                  <p className="text-[11px] dark:text-muted text-slate-500 mt-0.5">
+                    Target folders: <code className="dark:text-coolwhite text-slate-800 font-mono">clients/{clientToDelete.client_id}</code> and <code className="dark:text-coolwhite text-slate-800 font-mono">models/{clientToDelete.client_id}</code>. If unchecked, files are preserved for re-registration.
                   </p>
                 </div>
               </label>
@@ -316,8 +316,8 @@ export default function ClientsPage() {
 
             {/* Typed confirmation input */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-slate-300">
-                To confirm deletion, please type <span className="font-mono text-rose-400 font-bold">{clientToDelete.client_id}</span> below:
+              <label className="block text-xs font-medium dark:text-coolwhite text-slate-800">
+                To confirm deletion, please type <span className="font-mono text-rose-500 dark:text-rose-400 font-bold">{clientToDelete.client_id}</span> below:
               </label>
               <input
                 type="text"
@@ -325,12 +325,12 @@ export default function ClientsPage() {
                 onChange={(e) => setTypedConfirmId(e.target.value)}
                 disabled={deleting}
                 placeholder={clientToDelete.client_id}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:outline-none focus:border-rose-500 transition-colors"
+                className="w-full px-3 py-2 rounded-xl dark:bg-navy-950 bg-slate-50 border dark:border-navy-800 border-slate-300 dark:text-coolwhite text-slate-900 font-mono text-xs focus:outline-none focus:border-rose-500 transition-colors"
               />
             </div>
 
             {deleteError && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{deleteError}</span>
               </div>
@@ -341,7 +341,7 @@ export default function ClientsPage() {
                 type="button"
                 onClick={closeDeleteModal}
                 disabled={deleting}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition-colors"
+                className="px-4 py-2 rounded-xl dark:bg-navy-800 bg-slate-100 hover:dark:bg-navy-700 hover:bg-slate-200 dark:text-coolwhite text-slate-800 font-medium text-xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -349,7 +349,7 @@ export default function ClientsPage() {
                 type="button"
                 onClick={handleDeleteClient}
                 disabled={typedConfirmId !== clientToDelete.client_id || deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all shadow-sm cursor-pointer"
               >
                 {deleting ? (
                   <>

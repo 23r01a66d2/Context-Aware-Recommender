@@ -117,27 +117,27 @@ export default function TrainingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <Cpu className="w-6 h-6 text-indigo-400" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Cpu className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             Background Model Training Lifecycle
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Client: <span className="font-mono text-emerald-400 font-semibold">{activeId}</span>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Client: <span className="font-mono text-teal-600 dark:text-teal-400 font-semibold">{activeId}</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={fetchStatus}
-            className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors shadow-sm"
             title="Refresh Status"
           >
-            <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin text-indigo-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin text-indigo-500' : ''}`} />
           </button>
           {isCompleted && (
             <Link
               to={`/admin/clients/${activeId}/analytics`}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs shadow-sm transition-all"
             >
               <BarChart3 className="w-3.5 h-3.5" />
               View Offline Metrics
@@ -148,15 +148,15 @@ export default function TrainingPage() {
 
       {/* Error alert */}
       {error && (
-        <div className="p-4 rounded-lg bg-rose-950/70 border border-rose-800/80 text-rose-300 text-xs flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+        <div className="p-4 rounded-lg bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800/80 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500 dark:text-rose-400" />
           <div>{error}</div>
         </div>
       )}
 
       {/* Pipeline Lifecycle Stages Visualization */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-6">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+      <div className="bg-white dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
           Training Pipeline State
         </h2>
 
@@ -171,13 +171,13 @@ export default function TrainingPage() {
                 key={st}
                 className={`p-3 rounded-lg border text-center transition-all ${
                   isStageActive
-                    ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-300 font-bold animate-pulse'
+                    ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-300 font-bold animate-pulse'
                     : isStagePassed
-                    ? 'bg-slate-950/80 border-emerald-500/30 text-emerald-400'
-                    : 'bg-slate-950/40 border-slate-800 text-slate-600'
+                    ? 'bg-teal-50/50 dark:bg-navy-950/80 border-teal-200 dark:border-teal-500/30 text-teal-700 dark:text-teal-400'
+                    : 'bg-slate-50 dark:bg-navy-950/40 border-slate-200 dark:border-navy-800 text-slate-400 dark:text-slate-600'
                 }`}
               >
-                <div className="text-[10px] font-mono text-slate-500">Step {idx + 1}</div>
+                <div className="text-[10px] font-mono text-slate-500 dark:text-slate-500">Step {idx + 1}</div>
                 <div className="text-xs mt-1 truncate">{st}</div>
               </div>
             );
@@ -186,19 +186,19 @@ export default function TrainingPage() {
 
         {/* Real-time Progress Bar & Status Details */}
         {isRunning && (
-          <div className="mt-6 p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-3">
+          <div className="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-800 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-300 font-semibold flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+              <span className="text-slate-800 dark:text-slate-300 font-semibold flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400" />
                 {currentStatus === 'PREPROCESSING' && 'Preprocessing, Chronological Split & Leakage Audit...'}
                 {currentStatus === 'TRAINING' && `Training Epochs (${currentEpoch} / ${totalEpochs})`}
                 {currentStatus === 'EVALUATING' && 'Evaluating Precision, NDCG, Cold vs Warm metrics...'}
                 {currentStatus === 'NOT_STARTED' && 'Initializing background job worker...'}
               </span>
-              <span className="font-mono text-slate-400">{progressPct.toFixed(0)}%</span>
+              <span className="font-mono text-slate-600 dark:text-slate-400">{progressPct.toFixed(0)}%</span>
             </div>
 
-            <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-2.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
               <div
                 style={{ width: `${progressPct}%` }}
                 className="h-full bg-gradient-to-r from-indigo-500 to-teal-400 transition-all duration-300"
@@ -206,16 +206,16 @@ export default function TrainingPage() {
             </div>
 
             {statusData?.metrics && (
-              <div className="flex items-center gap-6 pt-2 text-xs font-mono text-slate-300">
+              <div className="flex items-center gap-6 pt-2 text-xs font-mono text-slate-700 dark:text-slate-300">
                 {statusData.metrics.train_loss !== undefined && (
                   <div className="flex items-center gap-1.5">
-                    <TrendingDown className="w-3.5 h-3.5 text-indigo-400" />
+                    <TrendingDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Train Loss: {statusData.metrics.train_loss}</span>
                   </div>
                 )}
                 {statusData.metrics.val_loss !== undefined && (
                   <div className="flex items-center gap-1.5">
-                    <TrendingDown className="w-3.5 h-3.5 text-teal-400" />
+                    <TrendingDown className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                     <span>Val Loss: {statusData.metrics.val_loss}</span>
                   </div>
                 )}
@@ -225,13 +225,13 @@ export default function TrainingPage() {
         )}
 
         {isCompleted && (
-          <div className="mt-6 p-4 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs flex items-center justify-between">
+          <div className="mt-6 p-4 rounded-xl bg-teal-50 dark:bg-emerald-950/40 border border-teal-200 dark:border-emerald-800/60 text-teal-800 dark:text-emerald-300 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <CheckCircle2 className="w-5 h-5 text-teal-600 dark:text-emerald-400" />
               <div>
                 <span className="font-bold">Training Complete!</span> Model registered into registry and active.
                 {statusData?.completed_at && (
-                  <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                     Completed at: {new Date(statusData.completed_at).toLocaleString()}
                   </div>
                 )}
@@ -239,7 +239,7 @@ export default function TrainingPage() {
             </div>
             <Link
               to={`/admin/clients/${activeId}/models`}
-              className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-sm transition-all"
+              className="px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs shadow-sm transition-all"
             >
               Inspect Model Registry
             </Link>
@@ -247,8 +247,8 @@ export default function TrainingPage() {
         )}
 
         {isFailed && (
-          <div className="mt-6 p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <div className="mt-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
+            <AlertCircle className="w-5 h-5 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">Training Failed:</span> {statusData?.error_message || 'An error occurred during execution.'}
             </div>
@@ -257,16 +257,16 @@ export default function TrainingPage() {
       </div>
 
       {/* Hyperparameters & Launch Form */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-sm">
-        <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-          <Play className="w-4 h-4 text-emerald-400" />
+      <div className="bg-white dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <Play className="w-4 h-4 text-teal-600 dark:text-teal-400" />
           Training Configuration
         </h2>
 
         <form onSubmit={handleStartTraining} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Epochs</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Epochs</label>
               <input
                 type="number"
                 min="1"
@@ -274,13 +274,13 @@ export default function TrainingPage() {
                 value={epochs}
                 onChange={(e) => setEpochs(e.target.value)}
                 disabled={isRunning}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:border-indigo-500"
+                className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-lg px-3 py-2 text-slate-900 dark:text-coolwhite font-mono focus:border-indigo-500"
               />
-              <span className="text-[11px] text-slate-500">Default: 15</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Default: 15</span>
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Batch Size</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Batch Size</label>
               <input
                 type="number"
                 min="16"
@@ -289,13 +289,13 @@ export default function TrainingPage() {
                 value={batchSize}
                 onChange={(e) => setBatchSize(e.target.value)}
                 disabled={isRunning}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:border-indigo-500"
+                className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-lg px-3 py-2 text-slate-900 dark:text-coolwhite font-mono focus:border-indigo-500"
               />
-              <span className="text-[11px] text-slate-500">Default: 256</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Default: 256</span>
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Learning Rate</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Learning Rate</label>
               <input
                 type="number"
                 min="0.00001"
@@ -304,14 +304,14 @@ export default function TrainingPage() {
                 value={learningRate}
                 onChange={(e) => setLearningRate(e.target.value)}
                 disabled={isRunning}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:border-indigo-500"
+                className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-lg px-3 py-2 text-slate-900 dark:text-coolwhite font-mono focus:border-indigo-500"
               />
-              <span className="text-[11px] text-slate-500">Default: 0.001 (AdamW)</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Default: 0.001 (AdamW)</span>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-            <span className="text-slate-400">
+          <div className="pt-4 border-t border-slate-100 dark:border-navy-800 flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400">
               Training runs asynchronously in the background without blocking the UI.
             </span>
             <button

@@ -11,7 +11,10 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend.database.database import init_db, SessionLocal
-from backend.services.client_service import ensure_demo_ecommerce_registered
+from backend.services.client_service import (
+    ensure_demo_ecommerce_registered,
+    ensure_all_canonical_clients_registered
+)
 from backend.api import (
     clients_router,
     datasets_router,
@@ -19,7 +22,9 @@ from backend.api import (
     training_router,
     recommendations_router,
     feedback_router,
-    models_router
+    models_router,
+    visual_analytics_router,
+    user_history_router
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -32,10 +37,10 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database tables...")
     init_db()
 
-    logger.info("Verifying canonical reference client registration (demo_ecommerce)...")
+    logger.info("Verifying canonical reference clients registration (demo_ecommerce, movielens_dataset)...")
     db = SessionLocal()
     try:
-        ensure_demo_ecommerce_registered(db)
+        ensure_all_canonical_clients_registered(db)
         from backend.services.model_service import ensure_demo_ecommerce_model_registered
         ensure_demo_ecommerce_model_registered(db)
     finally:
@@ -109,11 +114,16 @@ app.include_router(training_router, prefix="/api")
 app.include_router(recommendations_router, prefix="/api")
 app.include_router(feedback_router, prefix="/api")
 app.include_router(models_router, prefix="/api")
+app.include_router(visual_analytics_router, prefix="/api")
+app.include_router(user_history_router, prefix="/api")
 
 
 from pathlib import Path
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+
+import os
+import mimetypes
 
 @app.get("/api/health")
 def health_check():
@@ -125,6 +135,35 @@ def health_check():
         "status": "ok",
         "service": "context-aware-recommender"
     }
+
+
+@app.get("/api/images/{client_id}/{image_name}")
+def get_client_image(client_id: str, image_name: str):
+    """
+    Securely serves dataset/client images with path traversal protection.
+    Searches isolated client directories, data/datasets, and archive/data.
+    """
+    clean_cid = os.path.basename(client_id.strip())
+    clean_img = os.path.basename(image_name.strip())
+    if not clean_img or ".." in clean_img:
+        raise StarletteHTTPException(status_code=400, detail="Invalid image request.")
+
+    potential_paths = [
+        Path(f"clients/{clean_cid}/images/{clean_img}"),
+        Path(f"clients/{clean_cid}/data/{clean_img}"),
+        Path(f"clients/{clean_cid}/data/images/{clean_img}"),
+        Path(f"clients/{clean_cid}/raw/{clean_img}"),
+        Path(f"data/datasets/fashion/images/{clean_img}"),
+        Path(f"archive/data/{clean_img}"),
+        Path(f"archive/{clean_img}"),
+        Path(f"data/raw/{clean_img}"),
+    ]
+    for p in potential_paths:
+        if p.exists() and p.is_file():
+            mime, _ = mimetypes.guess_type(str(p))
+            return FileResponse(p, media_type=mime or "image/jpeg")
+
+    raise StarletteHTTPException(status_code=404, detail="Image not found.")
 
 
 # Mount production React build if dist directory exists

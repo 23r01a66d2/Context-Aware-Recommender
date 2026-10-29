@@ -61,3 +61,16 @@ def api_validate_schema(
         capabilities=res["capabilities"],
         detected_roles=res["detected_roles"]
     )
+
+
+@router.post("/schema/auto-repair", response_model=SchemaResponse)
+def api_auto_repair_schema(
+    client_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Safely auto-repairs missing IDs, derives display name, detects images,
+    and updates dataset & schema mappings without fabricating behavioral history.
+    """
+    from backend.services.schema_service import auto_repair_schema_for_client
+    return auto_repair_schema_for_client(db, client_id)

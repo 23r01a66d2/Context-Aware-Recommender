@@ -1,0 +1,356 @@
+{
+  "report_title": "MLVis Visualization Recommendation Model Evaluation & Comparison",
+  "benchmark_real": "kdd21-MLVis 1K Benchmark (Real-world charts)",
+  "benchmark_synthetic": "Synthetic Visualization Benchmark 600 (Documented rules, 60 archetypes)",
+  "samples": {
+    "real_train": 3721,
+    "real_test": 783,
+    "synthetic_train": 410,
+    "synthetic_test": 90
+  },
+  "evaluation_on_real_test_set": {
+    "statistical_baseline": {
+      "model_name": "Statistical Baseline on Real Test",
+      "accuracy": 0.39719029374201786,
+      "macro_f1": 0.18240670582382093,
+      "weighted_f1": 0.2843061177345564,
+      "precision_at_1": 0.39719029374201786,
+      "precision_at_3": 0.6245210727969349,
+      "ndcg_at_3": 0.516875442054371,
+      "per_class": {
+        "bar": {
+          "precision": 0.4423076923076923,
+          "recall": 0.8932038834951457,
+          "f1_score": 0.5916398713826366,
+          "support": 309
+        },
+        "line": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 295
+        },
+        "scatter": {
+          "precision": 0.3469387755102041,
+          "recall": 0.2463768115942029,
+          "f1_score": 0.288135593220339,
+          "support": 138
+        },
+        "box": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 40
+        },
+        "histogram": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 0
+        },
+        "heatmap": {
+          "precision": 0.01639344262295082,
+          "recall": 1.0,
+          "f1_score": 0.03225806451612903,
+          "support": 1
+        }
+      }
+    },
+    "mlvis_v1": {
+      "model_name": "MLVis v1.0.0 on Real Test",
+      "accuracy": 0.9067688378033205,
+      "macro_f1": 0.7721524031792839,
+      "weighted_f1": 0.9131870241584485,
+      "precision_at_1": 0.9067688378033205,
+      "precision_at_3": 0.9987228607918263,
+      "ndcg_at_3": 0.9614410564313101,
+      "per_class": {
+        "bar": {
+          "precision": 0.9892857142857143,
+          "recall": 0.8964401294498382,
+          "f1_score": 0.9405772495755518,
+          "support": 309
+        },
+        "line": {
+          "precision": 0.9469964664310954,
+          "recall": 0.9084745762711864,
+          "f1_score": 0.9273356401384083,
+          "support": 295
+        },
+        "scatter": {
+          "precision": 0.7294117647058823,
+          "recall": 0.8985507246376812,
+          "f1_score": 0.8051948051948052,
+          "support": 138
+        },
+        "box": {
+          "precision": 0.975609756097561,
+          "recall": 1.0,
+          "f1_score": 0.9876543209876543,
+          "support": 40
+        },
+        "histogram": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 0
+        },
+        "heatmap": {
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1_score": 0.2,
+          "support": 1
+        }
+      }
+    },
+    "mlvis_v2": {
+      "model_name": "MLVis v2.0.0 on Real Test",
+      "accuracy": 0.909323116219668,
+      "macro_f1": 0.7712105322321354,
+      "weighted_f1": 0.9165108331558073,
+      "precision_at_1": 0.909323116219668,
+      "precision_at_3": 0.9897828863346104,
+      "ndcg_at_3": 0.9572449152800601,
+      "per_class": {
+        "bar": {
+          "precision": 0.9964028776978417,
+          "recall": 0.8964401294498382,
+          "f1_score": 0.9437819420783645,
+          "support": 309
+        },
+        "line": {
+          "precision": 0.9535714285714286,
+          "recall": 0.9050847457627119,
+          "f1_score": 0.928695652173913,
+          "support": 295
+        },
+        "scatter": {
+          "precision": 0.7298850574712644,
+          "recall": 0.9202898550724637,
+          "f1_score": 0.8141025641025641,
+          "support": 138
+        },
+        "box": {
+          "precision": 0.975609756097561,
+          "recall": 1.0,
+          "f1_score": 0.9876543209876543,
+          "support": 40
+        },
+        "histogram": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 0
+        },
+        "heatmap": {
+          "precision": 0.1,
+          "recall": 1.0,
+          "f1_score": 0.18181818181818182,
+          "support": 1
+        }
+      }
+    },
+    "v2_vs_v1_improvement": {
+      "accuracy_delta": 0.0025542784163474774,
+      "macro_f1_delta": -0.0009418709471484821,
+      "ndcg_at_3_delta": -0.004196141151249999
+    }
+  },
+  "evaluation_on_synthetic_test_set": {
+    "statistical_baseline": {
+      "model_name": "Statistical Baseline on Synthetic Test",
+      "accuracy": 0.5222222222222223,
+      "macro_f1": 0.5120751341681574,
+      "weighted_f1": 0.3986980719538859,
+      "precision_at_1": 0.5222222222222223,
+      "precision_at_3": 0.8,
+      "ndcg_at_3": 0.6974804871031827,
+      "per_class": {
+        "bar": {
+          "precision": 0.2647058823529412,
+          "recall": 1.0,
+          "f1_score": 0.4186046511627907,
+          "support": 9
+        },
+        "line": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 11
+        },
+        "scatter": {
+          "precision": 0.4857142857142857,
+          "recall": 1.0,
+          "f1_score": 0.6538461538461539,
+          "support": 17
+        },
+        "box": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 25
+        },
+        "histogram": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 18
+        },
+        "heatmap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 10
+        }
+      }
+    },
+    "mlvis_v1": {
+      "model_name": "MLVis v1.0.0 on Synthetic Test",
+      "accuracy": 0.18888888888888888,
+      "macro_f1": 0.0529595015576324,
+      "weighted_f1": 0.06002076843198338,
+      "precision_at_1": 0.18888888888888888,
+      "precision_at_3": 0.4111111111111111,
+      "ndcg_at_3": 0.3261859507142915,
+      "per_class": {
+        "bar": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 9
+        },
+        "line": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 11
+        },
+        "scatter": {
+          "precision": 0.18888888888888888,
+          "recall": 1.0,
+          "f1_score": 0.3177570093457944,
+          "support": 17
+        },
+        "box": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 25
+        },
+        "histogram": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 18
+        },
+        "heatmap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 10
+        }
+      }
+    },
+    "mlvis_v2": {
+      "model_name": "MLVis v2.0.0 on Synthetic Test",
+      "accuracy": 0.9222222222222223,
+      "macro_f1": 0.9196116571116572,
+      "weighted_f1": 0.9241484666484666,
+      "precision_at_1": 0.9222222222222223,
+      "precision_at_3": 1.0,
+      "ndcg_at_3": 0.9712945363888912,
+      "per_class": {
+        "bar": {
+          "precision": 0.6363636363636364,
+          "recall": 0.7777777777777778,
+          "f1_score": 0.7,
+          "support": 9
+        },
+        "line": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 11
+        },
+        "scatter": {
+          "precision": 1.0,
+          "recall": 0.9411764705882353,
+          "f1_score": 0.9696969696969697,
+          "support": 17
+        },
+        "box": {
+          "precision": 0.9130434782608695,
+          "recall": 0.84,
+          "f1_score": 0.875,
+          "support": 25
+        },
+        "histogram": {
+          "precision": 0.9473684210526315,
+          "recall": 1.0,
+          "f1_score": 0.972972972972973,
+          "support": 18
+        },
+        "heatmap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 10
+        }
+      }
+    },
+    "v2_vs_v1_improvement": {
+      "accuracy_delta": 0.7333333333333334,
+      "macro_f1_delta": 0.8666521555540248,
+      "ndcg_at_3_delta": 0.6451085856745997
+    }
+  },
+  "evaluation_on_combined_test_set": {
+    "mlvis_v2": {
+      "model_name": "MLVis v2.0.0 on Combined Test",
+      "accuracy": 0.9106529209621993,
+      "macro_f1": 0.8874075341505296,
+      "weighted_f1": 0.9139047887947097,
+      "precision_at_1": 0.9106529209621993,
+      "precision_at_3": 0.9908361970217641,
+      "ndcg_at_3": 0.9586933298273623,
+      "per_class": {
+        "bar": {
+          "precision": 0.9826989619377162,
+          "recall": 0.8930817610062893,
+          "f1_score": 0.9357495881383855,
+          "support": 318
+        },
+        "line": {
+          "precision": 0.9553264604810997,
+          "recall": 0.9084967320261438,
+          "f1_score": 0.931323283082077,
+          "support": 306
+        },
+        "scatter": {
+          "precision": 0.7526315789473684,
+          "recall": 0.9225806451612903,
+          "f1_score": 0.8289855072463768,
+          "support": 155
+        },
+        "box": {
+          "precision": 0.953125,
+          "recall": 0.9384615384615385,
+          "f1_score": 0.9457364341085271,
+          "support": 65
+        },
+        "histogram": {
+          "precision": 0.9473684210526315,
+          "recall": 1.0,
+          "f1_score": 0.972972972972973,
+          "support": 18
+        },
+        "heatmap": {
+          "precision": 0.55,
+          "recall": 1.0,
+          "f1_score": 0.7096774193548387,
+          "support": 11
+        }
+      }
+    }
+  }
+}

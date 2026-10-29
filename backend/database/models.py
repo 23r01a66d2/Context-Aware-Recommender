@@ -42,6 +42,7 @@ class ClientModel(Base):
     model_versions = relationship("ModelVersionModel", back_populates="client", cascade="all, delete-orphan")
     recommendation_events = relationship("RecommendationEventModel", back_populates="client", cascade="all, delete-orphan")
     feedback_events = relationship("FeedbackEventModel", back_populates="client", cascade="all, delete-orphan")
+    visual_interaction_events = relationship("VisualInteractionEventModel", back_populates="client", cascade="all, delete-orphan")
 
 
 class DatasetModel(Base):
@@ -149,3 +150,20 @@ class FeedbackEventModel(Base):
     created_at = Column(DateTime, default=utcnow, nullable=False)
 
     client = relationship("ClientModel", back_populates="feedback_events")
+
+
+class VisualInteractionEventModel(Base):
+    __tablename__ = "visual_interaction_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(64), index=True, nullable=False)
+    client_id = Column(String(64), ForeignKey("clients.client_id", ondelete="CASCADE"), index=True, nullable=True)
+    user_id = Column(String(64), nullable=True)
+    event_type = Column(String(64), index=True, nullable=False)  # impression, click, chart_view, filter_change, selection, feedback_helpful, feedback_unhelpful
+    chart_id = Column(String(128), nullable=True)
+    chart_type = Column(String(64), nullable=True)
+    recommendation_id = Column(String(64), nullable=True)
+    details_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    client = relationship("ClientModel", back_populates="visual_interaction_events")

@@ -1,0 +1,14 @@
+{
+  "client_id": "fashion_client",
+  "model_version": "v1",
+  "training_run_id": "run_fashion_client_init",
+  "dataset_reference": "fashion_catalog.csv",
+  "training_timestamp": "2026-10-08T19:17:20.061889",
+  "feature_dimensions": {
+    "behavior": 8,
+    "content": 89,
+    "context": 7
+  },
+  "cold_start_threshold": 3,
+  "random_seed": 42
+}

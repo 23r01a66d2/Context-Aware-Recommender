@@ -9,6 +9,8 @@ from backend.api.recommendations import router as recommendations_router
 from backend.api.feedback import router as feedback_router
 
 from backend.api.models import router as models_router
+from backend.api.visual_analytics import router as visual_analytics_router
+from backend.api.user_history import router as user_history_router
 
 __all__ = [
     "clients_router",
@@ -17,5 +19,8 @@ __all__ = [
     "training_router",
     "recommendations_router",
     "feedback_router",
-    "models_router"
+    "models_router",
+    "visual_analytics_router",
+    "user_history_router"
 ]
+

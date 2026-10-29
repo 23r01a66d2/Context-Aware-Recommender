@@ -3,8 +3,67 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-canvas: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #f1f5f9;
+    --border-subtle: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+  }
+
+  .dark {
+    --bg-canvas: #071426;
+    --bg-surface: #101F35;
+    --bg-surface-elevated: #152642;
+    --border-subtle: #1E2E48;
+    --border-hover: #2A3F60;
+    --text-main: #DCE7F5;
+    --text-muted: #8DA4BE;
+  }
+
+  .minimal {
+    --bg-canvas: #fcfcfd;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #f8f9fa;
+    --border-subtle: #e9ecef;
+    --border-hover: #dee2e6;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+  }
+
+  /* Minimal theme soft purple UI overrides */
+  .minimal .bg-teal-500 {
+    background-color: #7c3aed !important;
+  }
+  .minimal .hover\:bg-teal-400:hover,
+  .minimal .hover\:bg-teal-600:hover {
+    background-color: #6d28d9 !important;
+  }
+  .minimal .text-teal-600,
+  .minimal .text-teal-500,
+  .minimal .text-teal-400,
+  .minimal .text-teal-300 {
+    color: #7c3aed !important;
+  }
+  .minimal .border-teal-500,
+  .minimal .border-teal-500\/30,
+  .minimal .border-teal-500\/20,
+  .minimal .border-teal-200 {
+    border-color: #ddd6fe !important;
+  }
+  .minimal .bg-teal-500\/10,
+  .minimal .bg-teal-500\/15,
+  .minimal .bg-teal-50 {
+    background-color: #f5f3ff !important;
+  }
+
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
+    background-color: var(--bg-canvas);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -14,12 +73,34 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #1E2E48;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2A3F60;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

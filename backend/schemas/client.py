@@ -42,6 +42,15 @@ class ClientResponse(BaseModel):
     has_schema: bool = False
     has_model: bool = False
     active_model_version: Optional[str] = None
+    dataset_available: bool = True
+    model_available: bool = True
+    candidate_data_available: bool = True
+    features_contract_valid: bool = True
+    is_inference_ready: bool = True
+    status: str = "Inference Ready"
+    not_ready_reason: Optional[str] = None
+    readiness_category: str = "Ready for Inference"
+    action_required: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -57,3 +66,39 @@ class ClientDeleteResponse(BaseModel):
     message: str
     deleted_records: dict
     physical_files_deleted: bool
+
+
+class ClientDomainOverview(BaseModel):
+    client_id: str
+    name: str
+    description: Optional[str] = ""
+    domain: str
+    dataset_name: str
+    user_label: str
+    item_label: str
+    users_count: int
+    items_count: int
+    interactions_count: int
+    interaction_types: List[str]
+    available_models: List[str]
+    active_model_version: Optional[str] = None
+    supports_context: bool = True
+    context_features: List[str] = []
+    supports_implicit_feedback: bool = True
+    is_system: bool = False
+    created_at: Optional[datetime] = None
+    dataset_available: bool = True
+    model_available: bool = True
+    candidate_data_available: bool = True
+    features_contract_valid: bool = True
+    is_inference_ready: bool = True
+    status: str = "Inference Ready"
+    not_ready_reason: Optional[str] = None
+    readiness_category: str = "Ready for Inference"
+    action_required: Optional[str] = None
+
+
+class ClientOverviewListResponse(BaseModel):
+    domains: List[ClientDomainOverview]
+    total: int
+

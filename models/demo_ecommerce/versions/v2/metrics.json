@@ -1,0 +1,38 @@
+{
+  "Overall": {
+    "sample_count": 100,
+    "Precision@5": 0.2,
+    "Recall@5": 1.0,
+    "NDCG@5": 0.8589,
+    "HitRate@5": 1.0,
+    "Precision@10": 0.1,
+    "Recall@10": 1.0,
+    "NDCG@10": 0.8589,
+    "HitRate@10": 1.0,
+    "MeanRank": 1.58
+  },
+  "Cold-Start": {
+    "sample_count": 53,
+    "Precision@5": 0.2,
+    "Recall@5": 1.0,
+    "NDCG@5": 0.8679,
+    "HitRate@5": 1.0,
+    "Precision@10": 0.1,
+    "Recall@10": 1.0,
+    "NDCG@10": 0.8679,
+    "HitRate@10": 1.0,
+    "MeanRank": 1.53
+  },
+  "Warm-Start": {
+    "sample_count": 47,
+    "Precision@5": 0.2,
+    "Recall@5": 1.0,
+    "NDCG@5": 0.8487,
+    "HitRate@5": 1.0,
+    "Precision@10": 0.1,
+    "Recall@10": 1.0,
+    "NDCG@10": 0.8487,
+    "HitRate@10": 1.0,
+    "MeanRank": 1.64
+  }
+}

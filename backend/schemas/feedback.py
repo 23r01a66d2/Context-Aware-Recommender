@@ -9,10 +9,28 @@ from pydantic import BaseModel, Field
 
 
 class FeedbackActionEnum(str, Enum):
+    IMPRESSION = "IMPRESSION"
+    VIEW = "VIEW"
+    LONG_VIEW = "LONG_VIEW"
     CLICK = "CLICK"
+    IGNORE = "IGNORE"
+    ADD_TO_CART = "ADD_TO_CART"
     ACCEPT = "ACCEPT"
     REJECT = "REJECT"
     PURCHASE = "PURCHASE"
+
+
+DEFAULT_FEEDBACK_WEIGHTS = {
+    "PURCHASE": 5.0,
+    "ADD_TO_CART": 4.0,
+    "CLICK": 2.0,
+    "ACCEPT": 1.5,
+    "LONG_VIEW": 1.0,
+    "VIEW": 0.5,
+    "IMPRESSION": 0.0,
+    "IGNORE": -0.1,
+    "REJECT": -3.0,
+}
 
 
 class FeedbackCreateRequest(BaseModel):

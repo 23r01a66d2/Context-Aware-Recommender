@@ -9,8 +9,21 @@ from sqlalchemy.orm import Session
 
 from backend.database.database import get_db
 from backend.database.models import ClientModel, DatasetModel, SchemaMappingModel, ModelVersionModel
-from backend.schemas.client import ClientCreate, ClientResponse, ClientListResponse, ClientDeleteResponse
-from backend.services.client_service import create_client, get_client_or_404, list_all_clients, delete_client
+from backend.schemas.client import (
+    ClientCreate,
+    ClientResponse,
+    ClientListResponse,
+    ClientDeleteResponse,
+    ClientOverviewListResponse
+)
+from backend.services.client_service import (
+    create_client,
+    get_client_or_404,
+    list_all_clients,
+    delete_client,
+    get_clients_overview,
+    evaluate_client_inference_readiness
+)
 
 router = APIRouter(prefix="/clients", tags=["Clients"])
 
@@ -37,6 +50,8 @@ def _to_client_response(client: ClientModel, db: Session) -> ClientResponse:
 
     is_system = bool(getattr(client, "is_system", False) or client.client_id == "demo_ecommerce")
 
+    readiness = evaluate_client_inference_readiness(client.client_id, db, active_version)
+
     return ClientResponse(
         client_id=client.client_id,
         name=client.name,
@@ -46,7 +61,16 @@ def _to_client_response(client: ClientModel, db: Session) -> ClientResponse:
         dataset_count=dataset_count,
         has_schema=has_schema,
         has_model=has_model,
-        active_model_version=active_version
+        active_model_version=active_version,
+        dataset_available=readiness["dataset_available"],
+        model_available=readiness["model_available"],
+        candidate_data_available=readiness["candidate_data_available"],
+        features_contract_valid=readiness["features_contract_valid"],
+        is_inference_ready=readiness["is_inference_ready"],
+        status=readiness["status"],
+        not_ready_reason=readiness["not_ready_reason"],
+        readiness_category=readiness.get("readiness_category", "Ready for Inference"),
+        action_required=readiness.get("action_required")
     )
 
 
@@ -55,6 +79,19 @@ def api_create_client(client_in: ClientCreate, db: Session = Depends(get_db)):
     """Create a new client and provision its isolated workspace."""
     client_obj = create_client(db, client_in)
     return _to_client_response(client_obj, db)
+
+
+@router.get("/overview", response_model=ClientOverviewListResponse)
+def api_get_clients_overview(
+    include_diagnostic: bool = Query(False, description="Include diagnostic test clients"),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns available datasets, recommendation domains, user/item statistics,
+    available models, contextual capabilities, and implicit feedback support.
+    """
+    overviews = get_clients_overview(db, include_diagnostic=include_diagnostic)
+    return ClientOverviewListResponse(domains=overviews, total=len(overviews))
 
 
 @router.get("", response_model=ClientListResponse)

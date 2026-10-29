@@ -1,0 +1,74 @@
+client_id: movielens_dataset
+client_name: movielens_dataset
+column_mappings:
+  user_id: USER_ID
+  movie_id: ITEM_ID
+  interaction_datetime: TIMESTAMP
+  target: TARGET
+  rating: IGNORE
+  movie_title: IGNORE
+  genre_no_genres_listed: CONTENT_FEATURE
+  genre_action: CONTENT_FEATURE
+  genre_adventure: CONTENT_FEATURE
+  genre_animation: CONTENT_FEATURE
+  genre_children: CONTENT_FEATURE
+  genre_comedy: CONTENT_FEATURE
+  genre_crime: CONTENT_FEATURE
+  genre_documentary: CONTENT_FEATURE
+  genre_drama: CONTENT_FEATURE
+  genre_fantasy: CONTENT_FEATURE
+  genre_film_noir: CONTENT_FEATURE
+  genre_horror: CONTENT_FEATURE
+  genre_imax: CONTENT_FEATURE
+  genre_musical: CONTENT_FEATURE
+  genre_mystery: CONTENT_FEATURE
+  genre_romance: CONTENT_FEATURE
+  genre_sci_fi: CONTENT_FEATURE
+  genre_thriller: CONTENT_FEATURE
+  genre_war: CONTENT_FEATURE
+  genre_western: CONTENT_FEATURE
+column_types:
+  user_id: numeric
+  movie_id: numeric
+  interaction_datetime: datetime
+  target: numeric
+  rating: numeric
+  movie_title: categorical
+  genre_no_genres_listed: numeric
+  genre_action: numeric
+  genre_adventure: numeric
+  genre_animation: numeric
+  genre_children: numeric
+  genre_comedy: numeric
+  genre_crime: numeric
+  genre_documentary: numeric
+  genre_drama: numeric
+  genre_fantasy: numeric
+  genre_film_noir: numeric
+  genre_horror: numeric
+  genre_imax: numeric
+  genre_musical: numeric
+  genre_mystery: numeric
+  genre_romance: numeric
+  genre_sci_fi: numeric
+  genre_thriller: numeric
+  genre_war: numeric
+  genre_western: numeric
+timestamp_format: '%d-%m-%Y'
+split_config:
+  strategy: chronological
+  train_start: '2024-01-01'
+  train_end: '2024-07-31'
+  val_start: '2024-08-01'
+  val_end: '2024-09-30'
+  test_start: '2024-10-01'
+  test_end: '2024-12-30'
+outlier_columns: []
+cold_start_threshold: 3
+evaluated_thresholds:
+- 1
+- 2
+- 3
+- 5
+target_positive_value: 1
+description: ''

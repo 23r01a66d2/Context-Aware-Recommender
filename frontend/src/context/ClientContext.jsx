@@ -17,6 +17,18 @@ function setStoredClientId(id) {
   } catch (_) {}
 }
 
+const DIAGNOSTIC_TEST_CLIENTS = new Set([
+  'contract_violation_client',
+  'client_no_model',
+  'client_without_active_model',
+  'temp_live_del_1',
+]);
+
+const isDiagnosticClient = (id) => {
+  if (!id) return false;
+  return DIAGNOSTIC_TEST_CLIENTS.has(id);
+};
+
 export function ClientProvider({ children }) {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState(getStoredClientId);
@@ -36,7 +48,8 @@ export function ClientProvider({ children }) {
     setLoadingClients(true);
     try {
       const data = await api.getClients();
-      const clientList = Array.isArray(data) ? data : (data?.clients || []);
+      const rawList = Array.isArray(data) ? data : (data?.clients || []);
+      const clientList = rawList.filter((c) => !isDiagnosticClient(c.client_id));
       setClients(clientList);
       if (clientList.length > 0) {
         setSelectedClientId((current) => {

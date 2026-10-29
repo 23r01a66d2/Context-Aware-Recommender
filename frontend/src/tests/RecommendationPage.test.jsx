@@ -7,6 +7,8 @@ import RecommendationPage from '../pages/user/RecommendationPage';
 import { ClientProvider } from '../context/ClientContext';
 import { api } from '../services/api';
 
+import { ThemeProvider } from '../context/ThemeContext';
+
 vi.mock('../services/api', () => ({
   api: {
     getHealth: vi.fn(),
@@ -14,13 +16,27 @@ vi.mock('../services/api', () => ({
     getRecommendations: vi.fn(),
     recordFeedback: vi.fn(),
     getSchema: vi.fn(),
+    getVisualDatasets: vi.fn(),
+    uploadVisualDataset: vi.fn(),
+    getDatasetProfile: vi.fn(),
+    getChartData: vi.fn(),
+    getVisualRecommendations: vi.fn(),
+    recordVisualInteraction: vi.fn(),
+    getVisualInteractions: vi.fn(),
+    getVisualAnalytics: vi.fn(),
+    getUserHistoryStatus: vi.fn(),
+    getUserHistory: vi.fn(),
+    recordUserHistory: vi.fn(),
   },
 }));
+
 
 function renderWithProviders(ui) {
   return render(
     <BrowserRouter>
-      <ClientProvider>{ui}</ClientProvider>
+      <ThemeProvider>
+        <ClientProvider>{ui}</ClientProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
@@ -37,13 +53,88 @@ describe('RecommendationPage Frontend Tests', () => {
     api.getHealth.mockResolvedValue({ status: 'ok', service: 'context-aware-recommender' });
     api.getClients.mockResolvedValue(mockClients);
     api.getSchema.mockResolvedValue({ column_mappings: {} });
+    api.recordFeedback.mockResolvedValue({ id: 1, status: 'recorded' });
+    api.getVisualDatasets.mockResolvedValue([
+      { id: 'demo_ecommerce', name: 'Indian E-Commerce Benchmark', filename: 'Ecommerce.csv', is_canonical: true }
+    ]);
+    api.getDatasetProfile.mockResolvedValue({
+      dimensions: {
+        total_rows: 100,
+        total_columns: 5,
+        memory_mb: 1.2,
+        numeric_columns_count: 2,
+        categorical_columns_count: 3,
+        total_missing_values: 0,
+      },
+      filename: 'Ecommerce.csv',
+      columns: [{ name: 'Category', dtype: 'categorical', unique_count: 3, null_count: 0, null_pct: 0 }],
+      numeric_columns: ['Price'],
+      categorical_columns: ['Category'],
+      sample_records: [{ Category: 'Tech', Price: 99 }]
+    });
+    api.getVisualRecommendations.mockResolvedValue({
+      model_type: 'mlvis',
+      model_version: 'v1.0.0',
+      dataset_id: 'demo_ecommerce',
+      recommendations: []
+    });
+    api.getChartData.mockResolvedValue({
+      chart_type: 'bar',
+      x_column: 'Category',
+      y_column: 'count',
+      data: [{ label: 'Tech', value: 10 }]
+    });
+    api.getVisualInteractions.mockResolvedValue([]);
+    api.getVisualAnalytics.mockResolvedValue({
+      total_impressions: 10,
+      total_clicks: 5,
+      ctr_percentage: 50.0
+    });
+    api.getUserHistoryStatus.mockResolvedValue({
+      client_id: 'demo_ecommerce',
+      user_id: '9272',
+      status: 'warm_start',
+      is_cold_start: false,
+      history_count: 5,
+      last_active: '2026-10-12T10:00:00Z',
+      recent_datasets: ['demo_ecommerce']
+    });
+    api.getUserHistory.mockResolvedValue({
+      client_id: 'demo_ecommerce',
+      user_id: '9272',
+      status: 'warm_start',
+      total_records: 1,
+      history: [
+        { event_id: 'evt_1', entry_type: 'chart_view', dataset_id: 'demo_ecommerce', timestamp: '2026-10-12T10:00:00Z' }
+      ]
+    });
   });
 
+
+  // Helper to switch to product recommendation mode in tests that verify product scoring
+  const switchToProductMode = async (user) => {
+    const prodBtn = screen.getByRole('button', { name: /Product Recommender/i });
+    await user.click(prodBtn);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Score & Rank Candidates/i })).toBeInTheDocument();
+    });
+  };
+
   // Test A: Recommendation page renders
-  it('A: Recommendation page renders essential controls', async () => {
+  it('A: Recommendation page renders essential controls with MLVis as primary default', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<RecommendationPage />);
 
     expect(screen.getByText(/Live Candidate Scoring & Recommendation Demo/i)).toBeInTheDocument();
+    // Default mode is Visual Analytics Recommender (MLVis)
+    expect(screen.getByRole('button', { name: /Visual Analytics Recommender \(MLVis\)/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Product Recommender \(Two-Tower\)/i })).toBeInTheDocument();
+
+    // MLVis workspace is shown by default
+    expect(screen.getByText(/Upload CSV/i)).toBeInTheDocument();
+
+    // Switching to Product Recommender reveals product controls
+    await switchToProductMode(user);
     expect(screen.getByText(/Customer \/ User Identifier/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Score & Rank Candidates/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Try New User/i })).toBeInTheDocument();
@@ -74,6 +165,7 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     const submitBtn = screen.getByRole('button', { name: /Score & Rank Candidates/i });
     await user.click(submitBtn);
 
@@ -82,10 +174,10 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     // Verify modality weights rendered
-    expect(screen.getByText(/Modality Attention Fusion Weights/i)).toBeInTheDocument();
-    expect(screen.getByText('0.008')).toBeInTheDocument();
-    expect(screen.getByText('0.542')).toBeInTheDocument();
-    expect(screen.getByText('0.450')).toBeInTheDocument();
+    expect(screen.getByText(/Adaptive Representation Fusion/i)).toBeInTheDocument();
+    expect(screen.getByText(/0\.008/)).toBeInTheDocument();
+    expect(screen.getByText(/0\.542/)).toBeInTheDocument();
+    expect(screen.getByText(/0\.450/)).toBeInTheDocument();
   });
 
   // Test C: Warm-start response (history_count >= threshold, status = warm_start, renders "Warm Start")
@@ -113,6 +205,7 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     const submitBtn = screen.getByRole('button', { name: /Score & Rank Candidates/i });
     await user.click(submitBtn);
 
@@ -145,6 +238,7 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
@@ -180,6 +274,7 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     const { container } = renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
@@ -194,8 +289,8 @@ describe('RecommendationPage Frontend Tests', () => {
     expect(pageText).not.toContain('sigmoid_probability');
   });
 
-  // Test F: Feedback button sends recommendation_id, client_id, user_id, item_id, action
-  it('F: Feedback button submits correct payload with recommendation_id linkage', async () => {
+  // Test F: Feedback action sends recommendation_id, client_id, user_id, item_id, action
+  it('F: Natural interaction submits correct payload with recommendation_id linkage', async () => {
     const user = userEvent.setup();
     api.getRecommendations.mockResolvedValueOnce({
       recommendation_id: 'rec_fb_link_005',
@@ -217,33 +312,26 @@ describe('RecommendationPage Frontend Tests', () => {
       ],
     });
 
-    api.recordFeedback.mockResolvedValueOnce({
-      id: 101,
-      recommendation_id: 'rec_fb_link_005',
-      client_id: 'demo_ecommerce',
-      user_id: 'user_fb_test',
-      item_id: 'prod_fb_target',
-      action: 'ACCEPT',
-      timestamp: '2026-09-28T20:00:00Z',
-    });
-
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Product prod_fb_target/i)).toBeInTheDocument();
     });
 
-    const acceptBtn = screen.getByRole('button', { name: /Accept/i });
-    await user.click(acceptBtn);
+    const viewBtn = screen.getByRole('button', { name: /View Product/i });
+    await user.click(viewBtn);
 
-    expect(api.recordFeedback).toHaveBeenCalledWith({
-      client_id: 'demo_ecommerce',
-      user_id: '9272',
-      item_id: 'prod_fb_target',
-      action: 'ACCEPT',
-      recommendation_id: 'rec_fb_link_005',
-    });
+    expect(api.recordFeedback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_id: 'demo_ecommerce',
+        user_id: '9272',
+        item_id: 'prod_fb_target',
+        action: 'CLICK',
+        recommendation_id: 'rec_fb_link_005',
+      })
+    );
   });
 
   // Test H: API failure renders a controlled user-facing error
@@ -254,6 +342,7 @@ describe('RecommendationPage Frontend Tests', () => {
     );
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
@@ -270,6 +359,7 @@ describe('RecommendationPage Frontend Tests', () => {
     );
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
@@ -296,6 +386,7 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
@@ -345,6 +436,7 @@ describe('RecommendationPage Frontend Tests', () => {
         {
           rank: 1,
           item_id: '5288',
+          movie_name: 'Action Movie Title',
           score: 0.9794,
           metadata: { movie_id: 5288, genre_action: 1 },
           explanation: 'Personalized from previous historical user interaction patterns.'
@@ -353,6 +445,7 @@ describe('RecommendationPage Frontend Tests', () => {
     });
 
     renderWithProviders(<RecommendationPage />);
+    await switchToProductMode(user);
 
     // Wait for MovieLens schema to finish loading
     await waitFor(() => {
@@ -362,8 +455,41 @@ describe('RecommendationPage Frontend Tests', () => {
     await user.click(screen.getByRole('button', { name: /Score & Rank Candidates/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Movie 5288/i)).toBeInTheDocument();
+      expect(screen.getByText('Action Movie Title')).toBeInTheDocument();
+      expect(screen.getByText('ID: 5288')).toBeInTheDocument();
       expect(screen.getByText(/^action$/i)).toBeInTheDocument();
+    });
+  });
+
+  // Test M: Recommendation mode toggle switches between Products and Visualizations
+  it('M: Allows toggling between Product Recommendations and Visualization Recommendations', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<RecommendationPage />);
+
+    // Initially in MLVis Visual Analytics mode (Default Primary)
+    expect(screen.getByRole('button', { name: /Visual Analytics Recommender \(MLVis\)/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Product Recommender \(Two-Tower\)/i })).toBeInTheDocument();
+
+    // Visual Analytics workspace is active by default
+    await waitFor(() => {
+      expect(screen.getByText(/Upload CSV/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Customer \/ User Identifier/i)).not.toBeInTheDocument();
+    });
+
+    // Switch to Product Recommender
+    await user.click(screen.getByRole('button', { name: /Product Recommender \(Two-Tower\)/i }));
+
+    // Product inputs should now be visible
+    await waitFor(() => {
+      expect(screen.getByText(/Customer \/ User Identifier/i)).toBeInTheDocument();
+    });
+
+    // Switch back to MLVis Visualization Recommender
+    await user.click(screen.getByRole('button', { name: /Visual Analytics Recommender \(MLVis\)/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Customer \/ User Identifier/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/Upload CSV/i)).toBeInTheDocument();
     });
   });
 });

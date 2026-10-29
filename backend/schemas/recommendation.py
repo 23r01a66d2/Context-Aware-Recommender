@@ -31,6 +31,11 @@ class RecommendationRequest(BaseModel):
 class RecommendedItem(BaseModel):
     rank: int
     item_id: str
+    display_name: Optional[str] = None
+    movie_name: Optional[str] = None
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+    price: Optional[float] = None
     score: float
     score_type: str = "sigmoid_score"
     metadata: Dict[str, Any] = Field(default_factory=dict)

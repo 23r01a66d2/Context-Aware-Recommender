@@ -39,6 +39,7 @@ class ColumnType(str, Enum):
     DATETIME = "datetime"
     ID = "id"
     TEXT = "text"
+    IMAGE = "image"
 
 
 # Regex patterns for auto-suggestion heuristics
@@ -76,7 +77,10 @@ ROLE_PATTERNS = {
     SchemaRole.CONTENT_FEATURE: [
         r"^product_category$", r"^category(_id|_code)?$", r"^unit_price$",
         r"^price(_usd)?$", r"^discount_percent$", r"^discount_amount$",
-        r"^brand(_id)?$", r"^department$", r"^cost$", r"^tag_.*$"
+        r"^brand(_id)?$", r"^department$", r"^cost$", r"^tag_.*$",
+        r"^image(_url|_path)?$", r"^img(_url)?$", r"^picture$", r"^photo$",
+        r"^display_name$", r"^display name$", r"^product_name$", r"^title$",
+        r"^item_name$", r"^name$", r"^description$"
     ],
     SchemaRole.CONTEXT_FEATURE: [
         r"^device(_type)?$", r"^user_type$", r"^marketing_channel$",
@@ -224,6 +228,15 @@ class ClientSchemaConfig:
 
 def infer_column_type(series: pd.Series) -> str:
     """Infers the general data type for a pandas Series."""
+    col_name = str(series.name).lower().strip()
+
+    # Image column detection
+    if any(k in col_name for k in ["image", "img", "photo", "picture", "poster"]):
+        return ColumnType.IMAGE.value
+    sample_vals = series.dropna().astype(str).head(10).tolist()
+    if any(any(val.lower().endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]) for val in sample_vals):
+        return ColumnType.IMAGE.value
+
     if pd.api.types.is_datetime64_any_dtype(series):
         return ColumnType.DATETIME.value
     if pd.api.types.is_numeric_dtype(series):
@@ -232,17 +245,24 @@ def infer_column_type(series: pd.Series) -> str:
         if unique_vals.issubset({0, 1, 0.0, 1.0, True, False}):
             return ColumnType.NUMERIC.value
         # If high-cardinality integer with ID-like pattern
-        if series.nunique() > 1000 and "id" in series.name.lower():
+        if series.nunique() > 1000 and "id" in col_name:
             return ColumnType.ID.value
         return ColumnType.NUMERIC.value
-    # Object or string
+
     # Check if convertible to datetime
-    if "date" in series.name.lower() or "time" in series.name.lower():
+    if "date" in col_name or "time" in col_name:
         return ColumnType.DATETIME.value
+
+    # Freeform text detection
+    if col_name in ["description", "review_text", "overview", "synopsis", "summary", "text"]:
+        return ColumnType.TEXT.value
+    if series.astype(str).str.len().mean() > 60:
+        return ColumnType.TEXT.value
+
     # Cardinality check
     if series.nunique() <= 50:
         return ColumnType.CATEGORICAL.value
-    if "id" in series.name.lower() or "code" in series.name.lower():
+    if "id" in col_name or "code" in col_name:
         return ColumnType.ID.value
     return ColumnType.CATEGORICAL.value
 
@@ -322,14 +342,18 @@ def auto_suggest_mappings(df: pd.DataFrame) -> Tuple[Dict[str, str], Dict[str, s
 
         # 4. Fallback based on column name & data type
         if suggested_role is None:
-            if "id" in col_lower:
+            if dtype == ColumnType.IMAGE.value:
+                suggested_role = SchemaRole.CONTENT_FEATURE.value
+            elif dtype == ColumnType.TEXT.value:
+                suggested_role = SchemaRole.CONTENT_FEATURE.value
+            elif "id" in col_lower:
                 suggested_role = SchemaRole.IGNORE.value  # Secondary ID like session_id
             elif dtype == ColumnType.DATETIME.value and SchemaRole.TIMESTAMP not in assigned_roles:
                 suggested_role = SchemaRole.TIMESTAMP.value
                 assigned_roles.add(SchemaRole.TIMESTAMP)
             elif "view" in col_lower or "click" in col_lower or "time" in col_lower:
                 suggested_role = SchemaRole.BEHAVIOR_FEATURE.value
-            elif "cat" in col_lower or "price" in col_lower or "cost" in col_lower:
+            elif "cat" in col_lower or "price" in col_lower or "cost" in col_lower or "name" in col_lower or "title" in col_lower:
                 suggested_role = SchemaRole.CONTENT_FEATURE.value
             else:
                 suggested_role = SchemaRole.CONTEXT_FEATURE.value
@@ -339,13 +363,18 @@ def auto_suggest_mappings(df: pd.DataFrame) -> Tuple[Dict[str, str], Dict[str, s
     return mappings, inferred_types
 
 
-def compute_dataset_capabilities(mappings: Dict[str, str]) -> Dict[str, bool]:
+def compute_dataset_capabilities(
+    mappings: Dict[str, str],
+    inferred_types: Optional[Dict[str, str]] = None
+) -> Dict[str, bool]:
     """
     Computes explicit platform capabilities supported by the current schema mappings:
     - recommendation_compatible: USER_ID and ITEM_ID present, plus at least one feature
+    - content_only_cold_start: ITEM_ID present, at least one feature present, but no USER_ID/interactions
     - supervised_training: recommendation_compatible AND TARGET present
     - temporal_training: recommendation_compatible AND TIMESTAMP present
     - cold_start_history: recommendation_compatible AND TIMESTAMP AND BEHAVIOR_FEATURE present
+    - has_images: presence of image feature column
     """
     user_cols = [c for c, r in mappings.items() if r == SchemaRole.USER_ID.value]
     item_cols = [c for c, r in mappings.items() if r == SchemaRole.ITEM_ID.value]
@@ -358,18 +387,116 @@ def compute_dataset_capabilities(mappings: Dict[str, str]) -> Dict[str, bool]:
     ]]
     behavior_cols = [c for c, r in mappings.items() if r == SchemaRole.BEHAVIOR_FEATURE.value]
 
+    has_images = False
+    if inferred_types:
+        has_images = any(t == ColumnType.IMAGE.value for t in inferred_types.values())
+    if not has_images:
+        has_images = any("image" in c.lower() or "img" in c.lower() for c in mappings.keys())
+
     has_identity = (len(user_cols) == 1) and (len(item_cols) == 1)
     has_timestamp = len(timestamp_cols) >= 1
     has_target = len(target_cols) == 1
     has_features = len(feat_cols) >= 1
 
     rec_compat = has_identity and has_features
+    content_only = (len(item_cols) >= 1 and has_features and len(user_cols) == 0)
+
     return {
-        "recommendation_compatible": bool(rec_compat),
+        "recommendation_compatible": bool(rec_compat or content_only),
+        "content_only_cold_start": bool(content_only),
         "supervised_training": bool(rec_compat and has_target),
         "temporal_training": bool(rec_compat and has_timestamp),
-        "cold_start_history": bool(rec_compat and has_timestamp and len(behavior_cols) > 0)
+        "cold_start_history": bool(rec_compat and has_timestamp and len(behavior_cols) > 0),
+        "has_images": bool(has_images)
     }
+
+
+def repair_and_augment_dataset_dataframe(
+    df: pd.DataFrame,
+    client_id: str = "dataset"
+) -> Tuple[pd.DataFrame, Dict[str, Dict[str, str]]]:
+    """
+    Safely repairs and augments dataset DataFrame:
+    - Missing item_id -> generates stable IDs (e.g. from image name or fashion_000001).
+    - Missing user_id -> if interaction records exist, generates stable anonymous user IDs;
+      if pure catalog with no interactions, does NOT fabricate behavioral history (classifies as Content-Only).
+    - Missing timestamp -> if interaction records exist, sets ingestion timestamp and marks generated.
+    - Missing display name -> derives from available title/name/category/description fields.
+    - Detects image columns automatically.
+
+    Returns:
+        (repaired_df, generated_fields_metadata)
+    """
+    df_out = df.copy()
+    generated_fields: Dict[str, Dict[str, str]] = {}
+
+    # 1. Identify or generate ITEM_ID
+    item_cols = [c for c in df_out.columns if any(re.match(pat, c.lower().strip()) for pat in ROLE_PATTERNS[SchemaRole.ITEM_ID])]
+    if not item_cols:
+        # Check if an image column has filenames like '3238.jpg'
+        image_cols = [c for c in df_out.columns if "image" in c.lower() or "img" in c.lower()]
+        extracted_from_image = False
+        if image_cols:
+            img_c = image_cols[0]
+            stems = df_out[img_c].astype(str).apply(lambda x: Path(str(x)).stem.strip())
+            if stems.nunique() == len(df_out) and not stems.empty:
+                df_out["item_id"] = stems.values
+                extracted_from_image = True
+                generated_fields["item_id"] = {
+                    "source": "derived_from_image",
+                    "reason": f"Generated automatically from image filenames in column '{img_c}'"
+                }
+
+        if not extracted_from_image:
+            # Stable generated IDs
+            prefix = client_id.replace("-", "_").lower()
+            df_out["item_id"] = [f"{prefix}_{i+1:06d}" for i in range(len(df_out))]
+            generated_fields["item_id"] = {
+                "source": "generated",
+                "reason": f"Generated automatically as stable item identifier ({prefix}_000001+)"
+            }
+
+    # 2. Derive display_name if not explicitly present
+    has_display_name = any(c.lower().strip() in ["display_name", "display name", "title", "product_name", "item_name", "movie_title"] for c in df_out.columns)
+    if not has_display_name:
+        cat_col = next((c for c in df_out.columns if "cat" in c.lower()), None)
+        id_col = "item_id" if "item_id" in df_out.columns else (item_cols[0] if item_cols else None)
+        if cat_col and id_col:
+            df_out["display_name"] = df_out[cat_col].astype(str) + " #" + df_out[id_col].astype(str)
+            generated_fields["display_name"] = {
+                "source": "derived",
+                "reason": f"Derived automatically from '{cat_col}' and '{id_col}'"
+            }
+        elif id_col:
+            df_out["display_name"] = "Item #" + df_out[id_col].astype(str)
+            generated_fields["display_name"] = {
+                "source": "derived",
+                "reason": f"Derived automatically from '{id_col}'"
+            }
+
+    # 3. Check USER_ID & interaction records
+    user_cols = [c for c in df_out.columns if any(re.match(pat, c.lower().strip()) for pat in ROLE_PATTERNS[SchemaRole.USER_ID])]
+    target_cols = [c for c in df_out.columns if any(re.match(pat, c.lower().strip()) for pat in ROLE_PATTERNS[SchemaRole.TARGET])]
+
+    if not user_cols and target_cols:
+        # Generate anonymous session/user IDs when interaction records exist
+        df_out["user_id"] = [f"anon_user_{i+1:06d}" for i in range(len(df_out))]
+        generated_fields["user_id"] = {
+            "source": "generated",
+            "reason": "Generated automatically for interaction events (anonymous session identity)"
+        }
+
+    # 4. Check TIMESTAMP if interactions exist
+    timestamp_cols = [c for c in df_out.columns if any(re.match(pat, c.lower().strip()) for pat in ROLE_PATTERNS[SchemaRole.TIMESTAMP])]
+    if not timestamp_cols and (user_cols or "user_id" in df_out.columns):
+        now_ts = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+        df_out["timestamp"] = now_ts
+        generated_fields["timestamp"] = {
+            "source": "generated",
+            "reason": f"Generated automatically from ingestion timestamp ({now_ts})"
+        }
+
+    return df_out, generated_fields
 
 
 def validate_schema(

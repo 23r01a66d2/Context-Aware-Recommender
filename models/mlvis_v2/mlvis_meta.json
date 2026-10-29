@@ -1,0 +1,154 @@
+{
+  "in_features": 26,
+  "num_classes": 6,
+  "classes": [
+    "bar",
+    "line",
+    "scatter",
+    "box",
+    "histogram",
+    "heatmap"
+  ],
+  "version": "2.0.0",
+  "metrics": {
+    "model_name": "MLVis v2.0.0 on Real Test",
+    "accuracy": 0.909323116219668,
+    "macro_f1": 0.7712105322321354,
+    "weighted_f1": 0.9165108331558073,
+    "precision_at_1": 0.909323116219668,
+    "precision_at_3": 0.9897828863346104,
+    "ndcg_at_3": 0.9572449152800601,
+    "per_class": {
+      "bar": {
+        "precision": 0.9964028776978417,
+        "recall": 0.8964401294498382,
+        "f1_score": 0.9437819420783645,
+        "support": 309
+      },
+      "line": {
+        "precision": 0.9535714285714286,
+        "recall": 0.9050847457627119,
+        "f1_score": 0.928695652173913,
+        "support": 295
+      },
+      "scatter": {
+        "precision": 0.7298850574712644,
+        "recall": 0.9202898550724637,
+        "f1_score": 0.8141025641025641,
+        "support": 138
+      },
+      "box": {
+        "precision": 0.975609756097561,
+        "recall": 1.0,
+        "f1_score": 0.9876543209876543,
+        "support": 40
+      },
+      "histogram": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "support": 0
+      },
+      "heatmap": {
+        "precision": 0.1,
+        "recall": 1.0,
+        "f1_score": 0.18181818181818182,
+        "support": 1
+      }
+    }
+  },
+  "metrics_synthetic": {
+    "model_name": "MLVis v2.0.0 on Synthetic Test",
+    "accuracy": 0.9222222222222223,
+    "macro_f1": 0.9196116571116572,
+    "weighted_f1": 0.9241484666484666,
+    "precision_at_1": 0.9222222222222223,
+    "precision_at_3": 1.0,
+    "ndcg_at_3": 0.9712945363888912,
+    "per_class": {
+      "bar": {
+        "precision": 0.6363636363636364,
+        "recall": 0.7777777777777778,
+        "f1_score": 0.7,
+        "support": 9
+      },
+      "line": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 11
+      },
+      "scatter": {
+        "precision": 1.0,
+        "recall": 0.9411764705882353,
+        "f1_score": 0.9696969696969697,
+        "support": 17
+      },
+      "box": {
+        "precision": 0.9130434782608695,
+        "recall": 0.84,
+        "f1_score": 0.875,
+        "support": 25
+      },
+      "histogram": {
+        "precision": 0.9473684210526315,
+        "recall": 1.0,
+        "f1_score": 0.972972972972973,
+        "support": 18
+      },
+      "heatmap": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 10
+      }
+    }
+  },
+  "metrics_combined": {
+    "model_name": "MLVis v2.0.0 on Combined Test",
+    "accuracy": 0.9106529209621993,
+    "macro_f1": 0.8874075341505296,
+    "weighted_f1": 0.9139047887947097,
+    "precision_at_1": 0.9106529209621993,
+    "precision_at_3": 0.9908361970217641,
+    "ndcg_at_3": 0.9586933298273623,
+    "per_class": {
+      "bar": {
+        "precision": 0.9826989619377162,
+        "recall": 0.8930817610062893,
+        "f1_score": 0.9357495881383855,
+        "support": 318
+      },
+      "line": {
+        "precision": 0.9553264604810997,
+        "recall": 0.9084967320261438,
+        "f1_score": 0.931323283082077,
+        "support": 306
+      },
+      "scatter": {
+        "precision": 0.7526315789473684,
+        "recall": 0.9225806451612903,
+        "f1_score": 0.8289855072463768,
+        "support": 155
+      },
+      "box": {
+        "precision": 0.953125,
+        "recall": 0.9384615384615385,
+        "f1_score": 0.9457364341085271,
+        "support": 65
+      },
+      "histogram": {
+        "precision": 0.9473684210526315,
+        "recall": 1.0,
+        "f1_score": 0.972972972972973,
+        "support": 18
+      },
+      "heatmap": {
+        "precision": 0.55,
+        "recall": 1.0,
+        "f1_score": 0.7096774193548387,
+        "support": 11
+      }
+    }
+  }
+}

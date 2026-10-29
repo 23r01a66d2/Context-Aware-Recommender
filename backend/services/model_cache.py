@@ -145,10 +145,18 @@ def _build_generic_catalog_and_profiles(
     Constructs isolated item catalog and customer historical profiles for a generic client
     using its configured schema and training interaction files.
     """
-    item_col = schema_config.get_item_id_col()
-    user_col = schema_config.get_user_id_col()
-    target_col = schema_config.get_target_col()
-    content_cols = [c for c in schema_config.get_content_cols() if c != item_col]
+    item_col = schema_config.get_item_id_col() if schema_config else "item_id"
+    try:
+        user_col = schema_config.get_user_id_col() if schema_config else None
+    except Exception:
+        user_col = None
+
+    try:
+        target_col = schema_config.get_target_col() if schema_config else None
+    except Exception:
+        target_col = None
+
+    content_cols = [c for c in schema_config.get_content_cols() if c != item_col] if schema_config else []
 
     # Locate training or processed dataset
     data_candidates = [
@@ -174,6 +182,16 @@ def _build_generic_catalog_and_profiles(
 
     # 1. Item Catalog
     keep_cols = [item_col] + content_cols
+    extra_meta_cols = [
+        "display_name", "display name", "movie_title", "title", "product_name",
+        "item_name", "image", "image_url", "image_path", "category", "price",
+        "unit_price", "description", "cultural_interest_category",
+        "recommended_content_type", "location_id", "restaurant_name", "place_name", "location"
+    ]
+    for ec in extra_meta_cols:
+        if ec in df.columns and ec not in keep_cols:
+            keep_cols.append(ec)
+
     existing_cols = [c for c in keep_cols if c in df.columns]
     catalog_df = (
         df[existing_cols]

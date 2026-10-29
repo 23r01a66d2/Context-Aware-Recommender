@@ -1,3 +1,6 @@
+# Recommendation-System
+Recommendation system that suggests relevant items to users based on their preferences, past interactions, and contextual information. The system aims to provide personalized recommendations and improve user experience using data analysis and machine learning techniques.
+
 # Real-Time Context-Aware Multi-Client Recommendation Platform: Mitigating Cold-Start via Multi-Modal Behavioral Fusion
 
 A production-grade, multi-client Machine Learning recommendation platform and research system designed to address the user cold-start problem in e-commerce using **Multi-Modal Neural Fusion**, **Dynamic Cold-Start Adaptive Gating**, **FastAPI** real-time serving, and a modern **React** administration and live recommendation dashboard.
@@ -352,34 +355,102 @@ The original 10-page Streamlit dashboard remains available for exploratory data 
 | `POST` | `/api/clients/{id}/models/{v}/activate` | Hot-swap active serving model |
 | `POST` | `/api/recommend` | Real-time candidate filtering, neural scoring, and ranking |
 | `POST` | `/api/feedback` | Record explicit feedback (Click, Accept, Reject, Purchase) |
+| `GET` | `/api/visual-analytics/datasets` | List available datasets (benchmark + uploaded) |
+| `POST` | `/api/visual-analytics/upload` | Upload & validate new CSV dataset for visual exploration |
+| `GET` | `/api/visual-analytics/profile` | Dataset profiling (dimensions, dtypes, nulls, statistics, correlations) |
+| `POST` | `/api/visual-analytics/chart-data` | Real-time chart data generation (Bar, Line, Histogram, Scatter, Heatmap) |
+| `POST` | `/api/visual-analytics/recommend` | Context-aware visual recommendations (Cold-start & Neural multimodal) |
+| `POST` | `/api/visual-analytics/interactions` | Record user interaction events (impressions, clicks, feedback) |
+| `GET` | `/api/visual-analytics/interactions` | Retrieve recent interaction event audit stream |
+| `GET` | `/api/visual-analytics/analytics` | Empirical model analytics: CTR, feedback ratio, cold vs returning cohorts |
 
 ---
 
-## 17. Verification & Automated Test Manifest
+## 17. Context-Aware Visual Analytics Architecture
+
+### Overview
+The Visual Analytics system aligns the platform with the project abstract by recommending relevant visualizations and analytics content based on dataset characteristics, user behavior, session context, and preferences.
+
+```mermaid
+flowchart TD
+    subgraph Data Ingestion & Profiling
+        D1[Dataset Selection / CSV Upload] --> D2[Validation & Column Inference]
+        D2 --> D3[Summary Statistics & Correlation Matrix]
+        D3 --> D4[Candidate Visualization Catalog]
+    end
+
+    subgraph Recommendation & Personalization
+        D4 --> R1{User History Depth N_hist}
+        R1 -->|< 3 interactions| R2[Cold-Start Statistical Suitability Engine]
+        R1 -->|>= 3 interactions| R3[Two-Tower PyTorch Multimodal Model & Gating]
+        R2 --> S1[Score: Heuristic Suitability]
+        R3 --> S2[Score: Neural Confidence + Modality Weights]
+        S1 --> RNK[Top-K Ranked Visual Suggestions]
+        S2 --> RNK
+    end
+
+    subgraph Interactive Exploration & Logging
+        RNK --> UI1[React Chart Explorer]
+        UI1 -->|Select Chart / Apply Filters| UI2[Plotly / Recharts Engine]
+        UI2 -->|Impressions, Clicks, Views, Feedback| LOG[SQLite Interaction Logging]
+        LOG --> ANL[Live Model Analytics & CTR Dashboard]
+    end
+```
+
+### Distinction Between Trained Model Personalization & Heuristic Fallback
+- **Neural Model Personalization (`score_source: "neural_model"`):**
+  When a dataset is associated with a client having an active trained model (such as `demo_ecommerce` with the active Two-Tower Multi-Modal checkpoint `v1`), candidate visual items are scored through the PyTorch neural network. The dynamic gating weights $(\alpha_{\text{beh}}, \alpha_{\text{cont}}, \alpha_{\text{ctx}})$ are returned and displayed to the user.
+- **MLVis Neural Visualization Recommender (`score_source: "mlvis_model"`):**
+  Trained on the official KDD 2021 MLVis 1K benchmark (`https://github.com/xeniaqian94/kdd21-MLVis`), pairing 6,820+ visualization records across 999 real-world datasets. The PyTorch MLP architecture (`MLVisRecommenderNet`) maps 26-dimensional dataset meta-features (cardinality, skewness, missingness, relational correlation) to canonical chart types (`bar`, `line`, `scatter`, `box`, `histogram`, `heatmap`) and field/axis encodings.
+- **Context-Aware Two-Tower Recommender (`score_source: "neural_model"`):**
+  Active client neural recommendation model integrating behavioral history, content embeddings, and session context via multimodal adaptive gating.
+- **Cold-Start Heuristic Suitability (`score_source: "heuristic_suitability"`):**
+  When exploring custom datasets or when no trained model is selected, recommendations are ranked via statistical chart suitability rules (correlation magnitude, cardinality, distribution skewness). Scores are explicitly labeled as rule-based statistical suitability and never misrepresented as trained model confidence.
+
+### MLVis Offline Benchmark Evaluation vs Statistical Baseline
+Evaluated on 783 held-out test visualization instances across 140 unseen datasets (grouped splits to strictly prevent dataset leakage):
+
+| Metric | Statistical Rule Baseline | MLVis Neural Recommender (v1.0.0) | Absolute Improvement |
+| :--- | :--- | :--- | :--- |
+| **Top-1 Accuracy** | 39.72% | **90.68%** | **+50.96%** |
+| **Macro F1-Score** | 0.1824 | **0.7722** | **+0.5898** |
+| **Precision@3 (Top-3 Hit Rate)** | 62.45% | **99.87%** | **+37.42%** |
+| **NDCG@3 Ranking Quality** | 0.5169 | **0.9614** | **+0.4446** |
+
+---
+
+## 18. Verification & Automated Test Manifest
 
 ### Backend Test Suite
-Executed: `python -m unittest discover -s tests -p "test_*.py"`
-- **Result:** **65 passed**, 0 failed
-- **Execution Date:** 2026-09-28
+Executed: `python -m unittest discover -s tests`
+- **Result:** **112 passed**, 0 failed
 - **Modules Covered:**
-  - `test_pipeline.py`: Data cleaning, deduplication, chronological split, point-in-time leakage audit, tensor boundary
-  - `test_schema_mapper.py`: Schema validation, type inference, role detection, canonical roundtrip
-  - `test_backend_api.py`: Multi-client isolation, database integrity, dataset registration
-  - `test_model_registry_and_training.py`: Background training state transitions, metric persistence, model activation
-  - `test_inference.py`: Live inference, cold/warm boundaries ($N_{\text{hist}} \in \{0, 1, 2, 3, 4\}$), candidate filtering, feedback linking
-  - `test_frontend_integration.py`: Static SPA asset serving, HTML client routing, 404 isolation
+  - `test_mlvis.py` (9 tests): Preprocessing, 26-dimensional feature extraction, statistical baseline evaluation, MLVis neural model checkpoint verification, inference engine prediction, API model selector dispatch, and offline benchmark reference integration.
+  - `test_visual_analytics.py` (12 tests): Dataset profiling, interactive chart generation (Bar, Line, Histogram, Scatter, Heatmap), candidate generation, cold-start vs neural ranking, interaction event logging, and empirical metrics.
+  - `test_pipeline.py`: Data cleaning, deduplication, chronological split, point-in-time leakage audit, tensor boundary.
+  - `test_schema_mapper.py`: Schema validation, type inference, role detection, canonical roundtrip.
+  - `test_backend_api.py`: Multi-client isolation, database integrity, dataset registration.
+  - `test_model_registry_and_training.py`: Background training state transitions, metric persistence, model activation.
+  - `test_inference.py`: Live inference, cold/warm boundaries ($N_{\text{hist}} \in \{0, 1, 2, 3, 4\}$), candidate filtering, feedback linking.
+  - `test_implicit_feedback.py`: Feedback event logging and weight adjustment.
+  - `test_client_deletion.py`: Multi-client deletion safeguards and workspace cleanup.
+  - `test_dataset_onboarding_and_repair.py`: Automated CSV onboarding, type repair, and config generation.
+  - `test_frontend_integration.py`: Static SPA asset serving, HTML client routing, 404 isolation.
 
 ### Frontend Test Suite
-Executed: `npm test` (Vitest 2.1.8 + React Testing Library)
-- **Result:** **10 passed**, 0 failed
+Executed: `npm test` (Vitest 2.1.9 + React Testing Library)
+- **Result:** **25 passed**, 0 failed across 6 test suites
 - **Components Covered:**
-  - `RecommendationPage.test.jsx`: Essential controls, 5-card rendering, cold badge suppression, warm badge activation, feedback actions, score formatting, filter controls, error handling
-  - `SchemaMappingPage.test.jsx`: Presence and persistence of all 8 canonical roles
-  - `TrainingPage.test.jsx`: Live epoch progress and loss rendering
+  - `VisualAnalyticsPage.test.jsx` (6 tests): Dataset selector, KPI summary cards, Recommendation Model Selector (MLVis, Context-Aware, Statistical, Custom), interactive chart controls, recommendation ranking cards, schema tab switching, live measured analytics tab, and feedback submission.
+  - `RecommendationPage.test.jsx`: Essential controls, 5-card rendering, cold badge suppression, warm badge activation, feedback actions, score formatting, filter controls.
+  - `DashboardPage.test.jsx`: Dashboard overview, client domain switcher, live health status.
+  - `ClientsPage.test.jsx`: Client list, protected system client badges, confirmation modal.
+  - `SchemaMappingPage.test.jsx`: Presence and persistence of canonical roles.
+  - `TrainingPage.test.jsx`: Epoch progress and loss convergence.
 
 ### Production Build
 Executed: `npm run build`
-- **Result:** Vite production build successful (`dist/` compiled cleanly).
+- **Result:** Vite production build successful (`frontend/dist/` compiled cleanly in 19.10s with 0 errors).
 
 ---
 

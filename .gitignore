@@ -53,6 +53,11 @@ frontend/node_modules/
 
 # Generated Processed Data & Research Output Folders
 data/processed/
+data/mlvis/
+!data/mlvis/README.md
+data/uploads/
+data/user_history/
+archive/
 outputs/
 
 # Client Workspaces: Raw Uploads, Processed Tensors & Ephemeral Test Clients

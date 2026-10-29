@@ -29,9 +29,10 @@ def ingest_data(raw_path: str = None, metadata_path: str = None) -> pd.DataFrame
     compute detailed schema metadata, and persist metadata.
     """
     if raw_path is None or metadata_path is None:
-        cfg = load_config()
-        raw_path = raw_path or cfg["data"]["raw_path"]
-        metadata_path = metadata_path or cfg["data"]["metadata_path"]
+        cfg = load_config() if Path("config.yaml").exists() else {}
+        data_cfg = cfg.get("data", {}) if isinstance(cfg, dict) else {}
+        raw_path = raw_path or data_cfg.get("raw_path", "data/raw/Ecommerce.csv")
+        metadata_path = metadata_path or data_cfg.get("metadata_path", "outputs/dataset_metadata.json")
 
     raw_file = Path(raw_path)
     if not raw_file.exists():

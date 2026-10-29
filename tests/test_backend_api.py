@@ -422,6 +422,53 @@ class TestBackendAPI(unittest.TestCase):
         resp_bad = self.client.post("/api/feedback", json=bad_client_payload)
         self.assertEqual(resp_bad.status_code, 404)
 
+    def test_22_user_history_endpoints(self):
+        """Verify /api/user-history endpoints: status check, event record, and history retrieval."""
+        from backend.services.user_history_service import clear_user_history
+        test_uid = f"api_user_{os.getpid()}_fresh"
+        cid = "demo_ecommerce"
+        clear_user_history(cid, test_uid)
+
+        # 1. Initially cold start
+        resp_status = self.client.get(f"/api/user-history/status?client_id={cid}&user_id={test_uid}")
+        self.assertEqual(resp_status.status_code, 200)
+        sdata = resp_status.json()
+        self.assertEqual(sdata["status"], "cold_start")
+        self.assertEqual(sdata["history_count"], 0)
+
+        # 2. Record an event
+        record_payload = {
+            "client_id": cid,
+            "user_id": test_uid,
+            "entry_type": "chart_view",
+            "dataset_id": "demo_ecommerce",
+            "items_or_charts": [{"chart_type": "bar", "dimension": "category"}]
+        }
+        resp_rec = self.client.post("/api/user-history/record", json=record_payload)
+        self.assertEqual(resp_rec.status_code, 201)
+        rdata = resp_rec.json()
+        self.assertEqual(rdata["status"], "recorded")
+        self.assertEqual(rdata["start_status"], "warm_start")
+
+        # 3. Status should now be warm start
+        resp_status2 = self.client.get(f"/api/user-history/status?client_id={cid}&user_id={test_uid}")
+        self.assertEqual(resp_status2.status_code, 200)
+        sdata2 = resp_status2.json()
+        self.assertEqual(sdata2["status"], "warm_start")
+        self.assertEqual(sdata2["history_count"], 1)
+
+        # 4. History endpoint returns the event
+        resp_hist = self.client.get(f"/api/user-history?client_id={cid}&user_id={test_uid}")
+        self.assertEqual(resp_hist.status_code, 200)
+        hdata = resp_hist.json()
+        self.assertEqual(hdata["total_records"], 1)
+        self.assertEqual(hdata["history"][0]["entry_type"], "chart_view")
+
+        # 5. Invalid user_id validation
+        resp_bad = self.client.get(f"/api/user-history/status?client_id={cid}&user_id=../bad_path")
+        self.assertEqual(resp_bad.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
+

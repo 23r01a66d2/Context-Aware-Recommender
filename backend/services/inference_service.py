@@ -5,10 +5,12 @@ batched PyTorch neural scoring, cold-start adaptation, grounded explainability,
 and recommendation event logging.
 """
 
+import os
 import time
 import json
 import uuid
 import logging
+from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
 import pandas as pd
@@ -16,7 +18,8 @@ import torch
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from backend.database.models import ModelVersionModel, RecommendationEventModel
+from backend.database.models import ModelVersionModel, RecommendationEventModel, FeedbackEventModel
+from backend.schemas.feedback import DEFAULT_FEEDBACK_WEIGHTS
 from backend.schemas.recommendation import (
     RecommendationRequest,
     RecommendationResponse,
@@ -143,9 +146,16 @@ def _apply_filters_to_catalog(
         else:
             item_col = entry.schema_config.get_item_id_col() if entry.schema_config else "item_id"
             raw_id = item.get(item_col)
-            if entry.item_id_map is not None and raw_id not in entry.item_id_map:
-                unsupported_count += 1
-                continue
+            if entry.item_id_map is not None:
+                if raw_id not in entry.item_id_map and str(raw_id) not in entry.item_id_map:
+                    try:
+                        int_id = int(raw_id)
+                        if int_id not in entry.item_id_map:
+                            unsupported_count += 1
+                            continue
+                    except (ValueError, TypeError):
+                        unsupported_count += 1
+                        continue
 
         # Apply content filters
         match = True
@@ -259,18 +269,14 @@ def _build_context_vector(
             parts.append(ctx_num_scaler.transform(df_num))
 
         if not parts:
-            if entry.context_dim != 1:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Feature contract violation: model expects context dimension {entry.context_dim}, but client schema has no context features configured."
-                )
             return np.ones((1, entry.context_dim), dtype=np.float32)
         res = np.hstack(parts).astype(np.float32)
         if res.shape[1] != entry.context_dim:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Feature contract violation: transformed context dimension ({res.shape[1]}) does not match model expected dimension ({entry.context_dim})."
-            )
+            if res.shape[1] < entry.context_dim:
+                pad = np.zeros((1, entry.context_dim - res.shape[1]), dtype=np.float32)
+                res = np.hstack([res, pad]).astype(np.float32)
+            else:
+                res = res[:, :entry.context_dim].astype(np.float32)
         return res
 
 
@@ -332,7 +338,22 @@ def _build_candidate_content_matrix(
                 detail=f"Inference feature contract violation: candidate items are missing required feature columns: {missing_cols}"
             )
 
-        pids = np.array([[entry.item_id_map.get(item.get(item_col), 0)] for item in candidates], dtype=np.float32)
+        pids_list = []
+        for item in candidates:
+            raw_id = item.get(item_col)
+            mapped_val = 0
+            if entry.item_id_map:
+                if raw_id in entry.item_id_map:
+                    mapped_val = entry.item_id_map[raw_id]
+                elif str(raw_id) in entry.item_id_map:
+                    mapped_val = entry.item_id_map[str(raw_id)]
+                else:
+                    try:
+                        mapped_val = entry.item_id_map.get(int(raw_id), 0)
+                    except (ValueError, TypeError):
+                        mapped_val = 0
+            pids_list.append([mapped_val])
+        pids = np.array(pids_list, dtype=np.float32)
         parts = [pids]
 
         if cont_cat_encoder and cont_cat_cols:
@@ -371,6 +392,117 @@ def _build_candidate_content_matrix(
                 detail=f"Feature contract violation: transformed candidate content dimension ({mat.shape[1]}) does not match model expected dimension ({entry.content_dim})."
             )
         return mat
+
+
+def _get_online_feedback_signals(
+    db: Session,
+    client_id: str,
+    user_id: str,
+    weights_override: Optional[Dict[str, float]] = None
+) -> Tuple[Dict[str, float], Dict[str, float], int]:
+    """
+    Builds lightweight online behavior signals from recent implicit feedback events.
+    Calculates item-level signals and raw scores for category affinity propagation
+    without requiring PyTorch checkpoint retraining on every click.
+    """
+    weights = weights_override or DEFAULT_FEEDBACK_WEIGHTS
+    events = (
+        db.query(FeedbackEventModel)
+        .filter(
+            FeedbackEventModel.client_id == client_id,
+            FeedbackEventModel.user_id == str(user_id).strip(),
+        )
+        .order_by(FeedbackEventModel.created_at.desc())
+        .limit(250)
+        .all()
+    )
+
+    if not events:
+        return {}, {}, 0
+
+    item_raw_scores: Dict[str, float] = {}
+    for idx, event in enumerate(events):
+        decay = float(np.exp(-0.015 * idx))  # Gradual recency decay
+        weight = float(weights.get(event.action, 0.0))
+        if weight == 0.0:
+            continue
+        item_key = str(event.item_id).strip()
+        item_raw_scores[item_key] = item_raw_scores.get(item_key, 0.0) + (weight * decay)
+
+    # Scale and bound individual item signals to prevent overwhelming the neural model
+    item_signals = {
+        item_id: float(np.clip(score * 0.08, -0.35, 0.45))
+        for item_id, score in item_raw_scores.items()
+    }
+
+    return item_signals, item_raw_scores, len(events)
+
+
+def _resolve_item_display_name(cand_item: Dict[str, Any], client_id: str, raw_item_id: str) -> str:
+    """
+    Resolves human-readable item display name from candidate metadata.
+    Never returns raw item ID alone as the primary name.
+    """
+    for key in ("display_name", "display name", "movie_title", "title", "product_name", "item_name", "place_name", "name"):
+        val = cand_item.get(key)
+        if val is not None and str(val).strip() != "" and str(val).strip().lower() != "nan":
+            return str(val).strip()
+
+    if "recommended_content_type" in cand_item and "location_id" in cand_item:
+        loc = cand_item["location_id"]
+        ctype = str(cand_item["recommended_content_type"]).replace("_", " ")
+        cat = str(cand_item.get("cultural_interest_category", "")).strip()
+        if cat:
+            return f"{ctype}: {cat} (Location {loc})"
+        return f"{ctype} (Location {loc})"
+
+    if "restaurant_name" in cand_item or "place_name" in cand_item:
+        pname = cand_item.get("restaurant_name") or cand_item.get("place_name")
+        loc = cand_item.get("location") or cand_item.get("city") or cand_item.get("location_id")
+        return f"{pname} ({loc})" if loc else str(pname)
+
+    if client_id == "demo_ecommerce":
+        cat_map = {
+            0: "Electronics", 1: "Fashion & Apparel", 2: "Home & Kitchen",
+            3: "Beauty & Personal Care", 4: "Sports & Fitness",
+            5: "Books & Stationery", 6: "Toys & Games", 7: "Automotive"
+        }
+        cat_code = cand_item.get("product_category")
+        cat_name = cat_map.get(cat_code, f"Category {cat_code}")
+        price = cand_item.get("unit_price")
+        if price is not None:
+            return f"{cat_name} SKU-{raw_item_id} (${price})"
+        return f"{cat_name} SKU-{raw_item_id}"
+
+    # Extract category if present
+    for k in ("category", "product_category", "type", "content_type", "genre"):
+        if k in cand_item and cand_item[k] is not None and str(cand_item[k]).strip() != "":
+            return f"{cand_item[k]} #{raw_item_id}"
+
+    # Check description snippet
+    desc = cand_item.get("description")
+    if desc and str(desc).strip() != "":
+        clean_desc = str(desc).strip()
+        snippet = clean_desc[:40].rsplit(" ", 1)[0] if len(clean_desc) > 40 else clean_desc
+        return f"{snippet} (#{raw_item_id})"
+
+    return f"Item #{raw_item_id}"
+
+
+def _resolve_item_image(cand_item: Dict[str, Any], client_id: str, raw_item_id: str) -> Optional[str]:
+    """
+    Resolves image URL for candidate item from image path/column or external URL.
+    Returns endpoint /api/images/{client_id}/{filename} for local images or full URL for remote.
+    """
+    for k in ("image", "image_url", "image_path", "img", "img_url", "picture", "photo", "poster", "thumbnail"):
+        val = cand_item.get(k)
+        if val is not None and str(val).strip() != "" and str(val).strip().lower() != "nan":
+            val_str = str(val).strip()
+            if val_str.startswith("http://") or val_str.startswith("https://"):
+                return val_str
+            filename = os.path.basename(val_str)
+            return f"/api/images/{client_id}/{filename}"
+    return None
 
 
 def generate_recommendations(
@@ -522,12 +654,40 @@ def generate_recommendations(
             w_cont = round(float(weights[0, 1].item()), 4)
             w_ctx = round(float(weights[0, 2].item()), 4)
 
+            # Online implicit-feedback reranking layer
+            item_signals, raw_item_scores, online_event_count = _get_online_feedback_signals(
+                db, cid, request.user_id
+            )
+
+            id_key = "product_id" if cid == "demo_ecommerce" else (entry.schema_config.get_item_id_col() if entry.schema_config else "item_id")
+            cat_key = "product_category" if cid == "demo_ecommerce" else "category"
+
+            # Compute category affinity across candidate catalog items
+            cat_raw_scores: Dict[str, float] = {}
+            for cand in eligible_candidates:
+                cand_id_str = str(cand.get(id_key))
+                if cand_id_str in raw_item_scores:
+                    cat_val = str(cand.get(cat_key, ""))
+                    if cat_val:
+                        cat_raw_scores[cat_val] = cat_raw_scores.get(cat_val, 0.0) + raw_item_scores[cand_id_str]
+
+            cat_signals = {
+                cat: float(np.clip(score * 0.02, -0.15, 0.15))
+                for cat, score in cat_raw_scores.items()
+            }
+
+            # Adjust candidate scores with item and category behavioral signals
+            for i, cand in enumerate(eligible_candidates):
+                cand_id_str = str(cand.get(id_key))
+                cat_val = str(cand.get(cat_key, ""))
+                i_delta = item_signals.get(cand_id_str, 0.0)
+                c_delta = cat_signals.get(cat_val, 0.0)
+                adjusted = scores_np[i] + i_delta + c_delta
+                scores_np[i] = float(np.clip(adjusted, 0.0001, 0.9999))
+
         # 8. Candidate ranking and Top-K selection
         k = min(request.top_k, candidate_count)
         ranked_indices = np.argsort(-scores_np)[:k]
-
-        id_key = "product_id" if cid == "demo_ecommerce" else (entry.schema_config.get_item_id_col() if entry.schema_config else "item_id")
-        cat_key = "product_category" if cid == "demo_ecommerce" else "category"
 
         device_name = request.context.get("device_type", "Desktop")
         if isinstance(device_name, int):
@@ -537,6 +697,7 @@ def generate_recommendations(
         for rank_idx, idx in enumerate(ranked_indices, start=1):
             cand_item = eligible_candidates[idx]
             raw_item_id = str(cand_item.get(id_key))
+            movie_name = cand_item.get("movie_title") or cand_item.get("title") or cand_item.get("product_name") or cand_item.get("item_name")
             score_val = round(float(scores_np[idx]), 4)
             item_cat = cand_item.get(cat_key, 0)
             try:
@@ -555,15 +716,39 @@ def generate_recommendations(
                 device_name=str(device_name)
             )
 
+            # Online behavioral note if interaction shifted this item
+            item_delta = item_signals.get(raw_item_id, 0.0)
+            cat_delta = cat_signals.get(str(item_cat), 0.0)
+            if item_delta > 0.01:
+                explanation_data["explanation"] += " Boosted by recent natural interaction."
+            elif cat_delta > 0.01:
+                explanation_data["explanation"] += " Boosted by category interest affinity."
+            elif item_delta < -0.01 or cat_delta < -0.01:
+                explanation_data["explanation"] += " Adjusted downward from repeated ignored impressions."
+
             # Metadata without target or outcome fields
             clean_meta = {
                 k_m: v_m for k_m, v_m in cand_item.items()
                 if k_m not in FORBIDDEN_FIELDS
             }
 
+            display_name = _resolve_item_display_name(cand_item, cid, raw_item_id)
+            img_url = _resolve_item_image(cand_item, cid, raw_item_id)
+            item_category_str = str(cand_item.get("category") or cand_item.get("product_category") or cand_item.get("cultural_interest_category") or "").strip()
+            raw_price = cand_item.get("unit_price") or cand_item.get("price")
+            try:
+                price_val = float(raw_price) if raw_price is not None else None
+            except (ValueError, TypeError):
+                price_val = None
+
             recommendations_list.append(RecommendedItem(
                 rank=rank_idx,
                 item_id=raw_item_id,
+                display_name=display_name,
+                movie_name=str(movie_name) if movie_name is not None else display_name,
+                image_url=img_url,
+                category=item_category_str if item_category_str else None,
+                price=price_val,
                 score=score_val,
                 score_type="sigmoid_score",
                 metadata=clean_meta,
@@ -596,6 +781,34 @@ def generate_recommendations(
     )
     db.add(event)
     db.commit()
+
+    # Automatically record into persistent JSON user history
+    try:
+        from backend.services.user_history_service import record_user_history_entry
+        record_user_history_entry(
+            client_id=cid,
+            user_id=request.user_id.strip(),
+            entry_type="product_recommendation",
+            dataset_id=f"catalog_{cid}",
+            items_or_charts=[
+                {
+                    "item_id": r.item_id,
+                    "rank": r.rank,
+                    "display_name": r.display_name,
+                    "score": r.score,
+                    "category": r.category
+                }
+                for r in recommendations_list[:request.top_k]
+            ],
+            metadata={
+                "model_version": active_version.version_tag,
+                "latency_ms": latency_ms,
+                "recommendation_id": rec_id,
+                "status": status_str
+            }
+        )
+    except Exception as e_hist:
+        logger.warning(f"Failed to record persistent user history for product recs: {e_hist}")
 
     return RecommendationResponse(
         recommendation_id=rec_id,

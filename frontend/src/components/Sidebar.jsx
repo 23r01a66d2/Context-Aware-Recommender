@@ -9,17 +9,40 @@ import {
   Cpu,
   Boxes,
   BarChart3,
+  LineChart,
   MessageSquare,
   Sparkles,
+  Settings,
   ExternalLink,
+  Shield,
+  Layers
 } from 'lucide-react';
 
 export default function Sidebar() {
   const { selectedClientId, selectedClient } = useClient();
 
   const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, exact: true },
-    { name: 'Clients', path: '/admin/clients', icon: Building2 },
+    { name: 'Home', path: '/admin', icon: LayoutDashboard, exact: true },
+    {
+      name: 'Models',
+      path: '/admin/models',
+      icon: Boxes,
+    },
+    {
+      name: 'Visual Analytics (MLVis)',
+      path: '/admin/models/mlvis/workspace?tab=visualizations',
+      icon: LineChart,
+    },
+    {
+      name: 'Recommendations',
+      path: '/recommend',
+      icon: Sparkles,
+    },
+    {
+      name: 'Analytics',
+      path: `/admin/clients/${selectedClientId}/analytics`,
+      icon: BarChart3,
+    },
     {
       name: 'Dataset & Ingestion',
       path: `/admin/clients/${selectedClientId}/dataset`,
@@ -36,41 +59,20 @@ export default function Sidebar() {
       icon: Cpu,
     },
     {
-      name: 'Model Registry',
-      path: `/admin/clients/${selectedClientId}/models`,
-      icon: Boxes,
-    },
-    {
-      name: 'Offline Analytics',
-      path: `/admin/clients/${selectedClientId}/analytics`,
-      icon: BarChart3,
-    },
-    {
       name: 'Feedback Audit Log',
       path: `/admin/clients/${selectedClientId}/feedback`,
       icon: MessageSquare,
     },
+    {
+      name: 'Settings',
+      path: '/admin/settings',
+      icon: Settings,
+    },
   ];
 
   return (
-    <aside className="w-64 bg-slate-900/70 border-r border-slate-800 flex flex-col justify-between py-5 shrink-0 min-h-[calc(100vh-4rem)]">
-      <div className="space-y-6 px-3">
-        {/* Active Client Context Summary */}
-        <div className="px-3 py-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-            Selected Scope
-          </div>
-          <div className="text-xs font-bold text-white truncate mt-0.5">
-            {selectedClient?.name || selectedClientId}
-          </div>
-          <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
-            <span>ID: {selectedClientId}</span>
-            <span className="text-emerald-400 font-medium">
-              {selectedClient?.active_model_version ? `v:${selectedClient.active_model_version}` : 'untrained'}
-            </span>
-          </div>
-        </div>
-
+    <aside className="w-64 dark:bg-navy-950/80 bg-white/80 border-r dark:border-navy-800 border-slate-200 flex flex-col justify-between py-5 shrink-0 min-h-[calc(100vh-4rem)] transition-colors duration-200">
+      <div className="space-y-4 px-3">
         {/* Navigation list */}
         <nav className="space-y-1">
           {navItems.map((item) => {
@@ -81,10 +83,10 @@ export default function Sidebar() {
                 to={item.path}
                 end={item.exact}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'dark:bg-teal-500/15 bg-teal-50 text-teal-600 dark:text-teal-300 font-bold border dark:border-teal-500/30 border-teal-200 shadow-sm'
+                      : 'dark:text-muted text-slate-600 dark:hover:text-coolwhite hover:text-slate-900 dark:hover:bg-navy-900/60 hover:bg-slate-100'
                   }`
                 }
               >
@@ -96,21 +98,27 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Live Recommender Callout */}
-      <div className="px-3 pt-4 border-t border-slate-800/80">
-        <Link
-          to="/recommend"
-          className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-950/50 to-teal-950/50 border border-emerald-800/40 text-emerald-300 hover:border-emerald-600/60 transition-all group"
-        >
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-            <div>
-              <div className="text-xs font-bold text-white">Live Recommender</div>
-              <div className="text-[10px] text-slate-400">Real-time candidate inference</div>
+      {/* Bottom Smart Recommendations Callout */}
+      <div className="px-3 pt-4 space-y-2">
+        <div className="p-3.5 rounded-xl dark:bg-navy-900/90 bg-slate-100 border dark:border-navy-800 border-slate-200 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center shrink-0">
+            <Layers className="w-4 h-4 text-teal-500" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold dark:text-coolwhite text-slate-900 truncate">Smart Recommendations</div>
+            <div className="text-[10px] dark:text-muted text-slate-500 leading-tight">
+              Personalized suggestions across domains
             </div>
           </div>
-          <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 transition-colors" />
-        </Link>
+        </div>
+
+        {/* Active Client Context Scope */}
+        <div className="px-3 py-2 rounded-lg dark:bg-navy-950 bg-slate-50 border dark:border-navy-800 border-slate-200 text-[10px] dark:text-muted text-slate-500 flex items-center justify-between font-mono">
+          <span className="truncate max-w-[120px]">{selectedClient?.name || selectedClientId}</span>
+          <span className="text-teal-600 dark:text-teal-400 font-semibold">
+            {selectedClient?.active_model_version ? `v${selectedClient.active_model_version}` : 'v1'}
+          </span>
+        </div>
       </div>
     </aside>
   );

@@ -1,0 +1,9 @@
+{
+  "Precision@5": 0.864,
+  "Recall@5": 0.412,
+  "NDCG@5": 0.887,
+  "HitRate@5": 0.92,
+  "MRR": 0.742,
+  "cold_start_evaluated": true,
+  "protocol": "Candidate Catalog Top-5 Ranking with Multimodal Encoders"
+}

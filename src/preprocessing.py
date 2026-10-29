@@ -56,7 +56,10 @@ def clean_and_split_data(
 
     if raw_df is None:
         from src.data_ingestion import ingest_data
-        raw_df = ingest_data(config["data"]["raw_path"], config["data"]["metadata_path"])
+        data_cfg = config.get("data", {}) if isinstance(config, dict) else {}
+        r_path = data_cfg.get("raw_path", "data/raw/Ecommerce.csv")
+        m_path = data_cfg.get("metadata_path", "outputs/dataset_metadata.json")
+        raw_df = ingest_data(r_path, m_path)
 
     df = raw_df.copy()
     initial_rows = len(df)
@@ -130,8 +133,9 @@ def clean_and_split_data(
         date_col = client_cfg.get_timestamp_col()
         date_fmt = client_cfg.timestamp_format
     else:
-        date_col = config["splitting"]["date_column"]
-        date_fmt = config["splitting"]["date_format"]
+        split_cfg = config.get("splitting", {}) if isinstance(config, dict) else {}
+        date_col = split_cfg.get("date_column", "visit_date")
+        date_fmt = split_cfg.get("date_format", "%d-%m-%Y")
 
     try:
         if date_fmt:
@@ -151,7 +155,16 @@ def clean_and_split_data(
     df = df.sort_values(by=sort_keys).reset_index(drop=True)
 
     # 5. Chronological Train / Val / Test Partitioning
-    split_info = client_cfg.split_config if client_cfg else config["splitting"]
+    if client_cfg:
+        split_info = client_cfg.split_config
+    else:
+        split_info = config.get("splitting", {}) if isinstance(config, dict) else {}
+        if not split_info:
+            split_info = {
+                "train_start": "2024-01-01", "train_end": "2024-07-31",
+                "val_start": "2024-08-01", "val_end": "2024-09-30",
+                "test_start": "2024-10-01", "test_end": "2024-12-30"
+            }
     has_date_intervals = (
         client_cfg is None or client_cfg.client_id == "demo_ecommerce"
     ) and "train_start" in split_info and "train_end" in split_info
@@ -215,10 +228,11 @@ def clean_and_split_data(
         val_path = save_dir / "validation.csv"
         test_path = save_dir / "test.csv"
     else:
-        cleaned_path = Path(config["data"]["cleaned_path"])
-        train_path = Path(config["data"]["train_path"])
-        val_path = Path(config["data"]["val_path"])
-        test_path = Path(config["data"]["test_path"])
+        data_cfg = config.get("data", {}) if isinstance(config, dict) else {}
+        cleaned_path = Path(data_cfg.get("cleaned_path", "data/processed/cleaned_dataset.csv"))
+        train_path = Path(data_cfg.get("train_path", "data/processed/train.csv"))
+        val_path = Path(data_cfg.get("val_path", "data/processed/validation.csv"))
+        test_path = Path(data_cfg.get("test_path", "data/processed/test.csv"))
         cleaned_path.parent.mkdir(parents=True, exist_ok=True)
 
     df.to_csv(cleaned_path, index=False)

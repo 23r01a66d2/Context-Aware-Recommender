@@ -1,0 +1,22 @@
+{
+  "in_features": 26,
+  "num_classes": 6,
+  "classes": [
+    "bar",
+    "line",
+    "scatter",
+    "box",
+    "histogram",
+    "heatmap"
+  ],
+  "version": "1.0.0",
+  "metrics": {
+    "model_name": "MLVis Neural Recommender",
+    "accuracy": 0.9067688378033205,
+    "macro_f1": 0.7721524031792839,
+    "weighted_f1": 0.9131870241584485,
+    "precision_at_1": 0.9067688378033205,
+    "precision_at_3": 0.9987228607918263,
+    "ndcg_at_3": 0.9614410564313101
+  }
+}

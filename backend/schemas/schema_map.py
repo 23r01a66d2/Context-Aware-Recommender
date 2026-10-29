@@ -24,6 +24,7 @@ class SchemaValidationResponse(BaseModel):
     warnings: List[str] = []
     capabilities: Dict[str, bool] = {}
     detected_roles: Dict[str, str] = {}
+    generated_fields: Dict[str, Dict[str, str]] = Field(default_factory=dict)
 
 
 class SchemaResponse(BaseModel):
@@ -36,3 +37,4 @@ class SchemaResponse(BaseModel):
     outlier_columns: List[str] = []
     cold_start_threshold: int = 3
     version: int = 1
+    generated_fields: Dict[str, Dict[str, str]] = Field(default_factory=dict)

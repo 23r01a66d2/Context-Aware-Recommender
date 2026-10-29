@@ -424,7 +424,8 @@ def prepare_multimodal_features(
         content_num_cols = ["unit_price", "discount_percent", "discount_amount"]
         context_cat_cols = ["device_type", "user_type", "marketing_channel", "visit_season"]
         context_num_cols = ["visit_day", "visit_month", "visit_weekday", "location"]
-        target_col = config["features"]["target"]
+        feat_cfg = config.get("features", {}) if isinstance(config, dict) else {}
+        target_col = feat_cfg.get("target", "purchased")
 
         beh_scaler = StandardScaler()
         beh_scaler.fit(train_split[beh_num_cols])

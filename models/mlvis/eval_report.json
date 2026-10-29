@@ -1,0 +1,31 @@
+{
+  "model_version": "1.0.0",
+  "dataset": "MLVis 1K Benchmark (kdd21-MLVis)",
+  "task": "Visualization and Chart Type Recommendation",
+  "training_samples": 3721,
+  "validation_samples": 1028,
+  "test_samples": 783,
+  "mlvis_neural_model": {
+    "model_name": "MLVis Neural Recommender",
+    "accuracy": 0.9067688378033205,
+    "macro_f1": 0.7721524031792839,
+    "weighted_f1": 0.9131870241584485,
+    "precision_at_1": 0.9067688378033205,
+    "precision_at_3": 0.9987228607918263,
+    "ndcg_at_3": 0.9614410564313101
+  },
+  "statistical_baseline": {
+    "model_name": "Statistical Baseline",
+    "accuracy": 0.39719029374201786,
+    "macro_f1": 0.18240670582382093,
+    "weighted_f1": 0.2843061177345564,
+    "precision_at_1": 0.39719029374201786,
+    "precision_at_3": 0.6245210727969349,
+    "ndcg_at_3": 0.516875442054371
+  },
+  "improvement": {
+    "accuracy_delta": 0.5095785440613027,
+    "macro_f1_delta": 0.589745697355463,
+    "ndcg_at_3_delta": 0.4445656143769391
+  }
+}
